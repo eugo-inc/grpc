@@ -328,7 +328,7 @@ if BUILD_WITH_SYSTEM_GRPC:
     CORE_C_FILES = filter(
         lambda x: "src/core" not in x, CORE_C_FILES
     )
-  GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
+    GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
 
 EXTENSION_INCLUDE_DIRECTORIES = (
     (PYTHON_STEM,)
