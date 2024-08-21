@@ -335,6 +335,9 @@ if BUILD_WITH_SYSTEM_GRPC:
     CORE_C_FILES = filter(
         lambda x: "src/core" not in x, CORE_C_FILES
     )
+    CORE_C_FILES = filter(
+        lambda x: "third_party/upb" not in x, CORE_C_FILES
+    )
     GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
     UPB_INCLUDE = ()
     UPB_GRPC_GENERATED_INCLUDE = ()
