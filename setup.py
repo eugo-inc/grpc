@@ -170,6 +170,13 @@ BUILD_WITH_SYSTEM_ABSL = os.environ.get("GRPC_PYTHON_BUILD_SYSTEM_ABSL", False)
 # have the header files installed (in /usr/include/grpc) and during
 # runtime, the shared libraries libgrpc and libgpr must be installed
 BUILD_WITH_SYSTEM_GRPC = os.environ.get("GRPC_PYTHON_BUILD_SYSTEM_GRPC", False)
+if BUILD_WITH_SYSTEM_GRPC:
+    # Implies building with other system libraries as well
+    BUILD_WITH_SYSTEM_OPENSSL = True
+    BUILD_WITH_SYSTEM_ZLIB = True
+    BUILD_WITH_SYSTEM_CARES = True
+    BUILD_WITH_SYSTEM_RE2 = True
+    BUILD_WITH_SYSTEM_ABSL = True
 
 # Export this variable to force building the python extension with a statically linked libstdc++.
 # At least on linux, this is normally not needed as we can build manylinux-compatible wheels on linux just fine
@@ -329,6 +336,11 @@ if BUILD_WITH_SYSTEM_GRPC:
         lambda x: "src/core" not in x, CORE_C_FILES
     )
     GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
+    UPB_INCLUDE = ()
+    UPB_GRPC_GENERATED_INCLUDE = ()
+    UPBDEFS_GRPC_GENERATED_INCLUDE = ()
+    UTF8_RANGE_INCLUDE = ()
+    XXHASH_INCLUDE = ()
 
 EXTENSION_INCLUDE_DIRECTORIES = (
     (PYTHON_STEM,)
