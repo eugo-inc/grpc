@@ -324,6 +324,12 @@ if BUILD_WITH_SYSTEM_ABSL:
     )
     ABSL_INCLUDE = (os.path.join("/usr", "include"),)
 
+if BUILD_WITH_SYSTEM_GRPC:
+    CORE_C_FILES = filter(
+        lambda x: "src/core" not in x, CORE_C_FILES
+    )
+  GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
+
 EXTENSION_INCLUDE_DIRECTORIES = (
     (PYTHON_STEM,)
     + CORE_INCLUDE
@@ -338,6 +344,7 @@ EXTENSION_INCLUDE_DIRECTORIES = (
     + UTF8_RANGE_INCLUDE
     + XXHASH_INCLUDE
     + ZLIB_INCLUDE
+    + GRPC_INCLUDE
 )
 
 EXTENSION_LIBRARIES = ()
