@@ -46,9 +46,9 @@ egg_info.manifest_maker.template = "PYTHON-MANIFEST.in"
 PY3 = sys.version_info.major == 3
 PYTHON_STEM = os.path.join("src", "python", "grpcio")
 CORE_INCLUDE = (
-    "include",
     ".",
 )
+GRPC_INCLUDE = ("include",)
 ABSL_INCLUDE = (os.path.join("third_party", "abseil-cpp"),)
 ADDRESS_SORTING_INCLUDE = (
     os.path.join("third_party", "address_sorting", "include"),
@@ -333,6 +333,7 @@ if BUILD_WITH_SYSTEM_GRPC:
 EXTENSION_INCLUDE_DIRECTORIES = (
     (PYTHON_STEM,)
     + CORE_INCLUDE
+    + GRPC_INCLUDE
     + ABSL_INCLUDE
     + ADDRESS_SORTING_INCLUDE
     + CARES_INCLUDE
@@ -344,7 +345,6 @@ EXTENSION_INCLUDE_DIRECTORIES = (
     + UTF8_RANGE_INCLUDE
     + XXHASH_INCLUDE
     + ZLIB_INCLUDE
-    + GRPC_INCLUDE
 )
 
 EXTENSION_LIBRARIES = ()
