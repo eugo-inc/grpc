@@ -166,6 +166,11 @@ BUILD_WITH_SYSTEM_RE2 = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_RE2", "False")
 # runtime, the shared library must be installed
 BUILD_WITH_SYSTEM_ABSL = os.environ.get("GRPC_PYTHON_BUILD_SYSTEM_ABSL", False)
 
+# Export this variable to use the system installation of grpc. You need to
+# have the header files installed (in /usr/include/grpc) and during
+# runtime, the shared libraries libgrpc and libgpr must be installed
+BUILD_WITH_SYSTEM_GRPC = os.environ.get("GRPC_PYTHON_BUILD_SYSTEM_GRPC", False)
+
 # Export this variable to force building the python extension with a statically linked libstdc++.
 # At least on linux, this is normally not needed as we can build manylinux-compatible wheels on linux just fine
 # without statically linking libstdc++ (which leads to a slight increase in the wheel size).
@@ -363,6 +368,9 @@ if BUILD_WITH_SYSTEM_ABSL:
         lib.stem[3:]
         for lib in sorted(pathlib.Path("/usr").glob("lib*/libabsl_*.so"))
     )
+if BUILD_WITH_SYSTEM_GRPC:
+    EXTENSION_LIBRARIES += ("grpc",)  
+    EXTENSION_LIBRARIES += ("gpr",)
 
 DEFINE_MACROS = (("_WIN32_WINNT", 0x600),)
 asm_files = []
