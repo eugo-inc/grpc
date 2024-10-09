@@ -15,6 +15,7 @@
 #ifndef GRPC_SRC_CORE_LIB_PROMISE_INTERCEPTOR_LIST_H
 #define GRPC_SRC_CORE_LIB_PROMISE_INTERCEPTOR_LIST_H
 
+#include <grpc/support/port_platform.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -27,15 +28,12 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/optional.h"
-
-#include <grpc/support/port_platform.h>
-
-#include "src/core/lib/gprpp/construct_destruct.h"
-#include "src/core/lib/gprpp/debug_location.h"
 #include "src/core/lib/promise/context.h"
 #include "src/core/lib/promise/detail/promise_factory.h"
 #include "src/core/lib/promise/poll.h"
 #include "src/core/lib/resource_quota/arena.h"
+#include "src/core/util/construct_destruct.h"
+#include "src/core/util/debug_location.h"
 
 namespace grpc_core {
 
@@ -217,15 +215,13 @@ class InterceptorList {
   // Append a new map to the end of the chain.
   template <typename Fn>
   void AppendMap(Fn fn, DebugLocation from) {
-    Append(MakeMapToAdd(
-        std::move(fn), [] {}, from));
+    Append(MakeMapToAdd(std::move(fn), [] {}, from));
   }
 
   // Prepend a new map to the beginning of the chain.
   template <typename Fn>
   void PrependMap(Fn fn, DebugLocation from) {
-    Prepend(MakeMapToAdd(
-        std::move(fn), [] {}, from));
+    Prepend(MakeMapToAdd(std::move(fn), [] {}, from));
   }
 
   // Append a new map to the end of the chain, with a cleanup function to be

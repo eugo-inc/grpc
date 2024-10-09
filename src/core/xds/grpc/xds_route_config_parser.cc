@@ -16,6 +16,8 @@
 
 #include "src/core/xds/grpc/xds_route_config_parser.h"
 
+#include <grpc/status.h>
+#include <grpc/support/port_platform.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -51,25 +53,18 @@
 #include "google/protobuf/duration.upb.h"
 #include "google/protobuf/wrappers.upb.h"
 #include "re2/re2.h"
-#include "upb/base/string_view.h"
-#include "upb/message/map.h"
-#include "upb/text/encode.h"
-
-#include <grpc/status.h>
-#include <grpc/support/port_platform.h>
-
 #include "src/core/lib/channel/status_util.h"
 #include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/debug/trace.h"
-#include "src/core/lib/gprpp/env.h"
-#include "src/core/lib/gprpp/match.h"
-#include "src/core/lib/gprpp/ref_counted_ptr.h"
-#include "src/core/lib/gprpp/time.h"
-#include "src/core/lib/matchers/matchers.h"
 #include "src/core/load_balancing/lb_policy_registry.h"
+#include "src/core/util/env.h"
 #include "src/core/util/json/json.h"
 #include "src/core/util/json/json_writer.h"
+#include "src/core/util/match.h"
+#include "src/core/util/matchers.h"
+#include "src/core/util/ref_counted_ptr.h"
 #include "src/core/util/string.h"
+#include "src/core/util/time.h"
 #include "src/core/util/upb_utils.h"
 #include "src/core/xds/grpc/xds_cluster_specifier_plugin.h"
 #include "src/core/xds/grpc/xds_common_types.h"
@@ -78,6 +73,9 @@
 #include "src/core/xds/grpc/xds_http_filter_registry.h"
 #include "src/core/xds/grpc/xds_routing.h"
 #include "src/core/xds/xds_client/xds_resource_type.h"
+#include "upb/base/string_view.h"
+#include "upb/message/map.h"
+#include "upb/text/encode.h"
 
 namespace grpc_core {
 
@@ -441,7 +439,7 @@ XdsRouteConfigResource::TypedPerFilterConfig ParseTypedPerFilterConfig(
     }
     absl::optional<XdsHttpFilterImpl::FilterConfig> filter_config =
         filter_impl->GenerateFilterConfigOverride(
-            context, std::move(*extension_to_use), errors);
+            key, context, std::move(*extension_to_use), errors);
     if (filter_config.has_value()) {
       typed_per_filter_config[std::string(key)] = std::move(*filter_config);
     }
@@ -474,18 +472,13 @@ XdsRouteConfigResource::RetryPolicy RetryPolicyParse(
       }
     }
   }
-  const google_protobuf_UInt32Value* num_retries =
-      envoy_config_route_v3_RetryPolicy_num_retries(retry_policy_proto);
-  if (num_retries != nullptr) {
-    uint32_t num_retries_value = google_protobuf_UInt32Value_value(num_retries);
-    if (num_retries_value == 0) {
-      ValidationErrors::ScopedField field(errors, ".num_retries");
-      errors->AddError("must be greater than 0");
-    } else {
-      retry_policy.num_retries = num_retries_value;
-    }
-  } else {
-    retry_policy.num_retries = 1;
+  retry_policy.num_retries =
+      ParseUInt32Value(
+          envoy_config_route_v3_RetryPolicy_num_retries(retry_policy_proto))
+          .value_or(1);
+  if (retry_policy.num_retries == 0) {
+    ValidationErrors::ScopedField field(errors, ".num_retries");
+    errors->AddError("must be greater than 0");
   }
   const envoy_config_route_v3_RetryPolicy_RetryBackOff* backoff =
       envoy_config_route_v3_RetryPolicy_retry_back_off(retry_policy_proto);
@@ -692,14 +685,14 @@ absl::optional<XdsRouteConfigResource::Route::RouteAction> RouteActionParse(
         errors->AddError("must be non-empty");
       }
       // weight
-      const google_protobuf_UInt32Value* weight_proto =
+      auto weight = ParseUInt32Value(
           envoy_config_route_v3_WeightedCluster_ClusterWeight_weight(
-              cluster_proto);
-      if (weight_proto == nullptr) {
+              cluster_proto));
+      if (!weight.has_value()) {
         ValidationErrors::ScopedField field(errors, ".weight");
         errors->AddError("field not present");
       } else {
-        cluster.weight = google_protobuf_UInt32Value_value(weight_proto);
+        cluster.weight = *weight;
         if (cluster.weight == 0) continue;
         total_weight += cluster.weight;
       }

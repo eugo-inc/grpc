@@ -16,6 +16,8 @@
 
 #include "src/core/xds/grpc/xds_http_filter_registry.h"
 
+#include <grpc/support/port_platform.h>
+
 #include <map>
 #include <utility>
 #include <vector>
@@ -24,13 +26,12 @@
 #include "absl/types/variant.h"
 #include "envoy/extensions/filters/http/router/v3/router.upb.h"
 #include "envoy/extensions/filters/http/router/v3/router.upbdefs.h"
-
-#include <grpc/support/port_platform.h>
-
 #include "src/core/util/json/json.h"
 #include "src/core/xds/grpc/xds_http_fault_filter.h"
+#include "src/core/xds/grpc/xds_http_gcp_authn_filter.h"
 #include "src/core/xds/grpc/xds_http_rbac_filter.h"
 #include "src/core/xds/grpc/xds_http_stateful_session_filter.h"
+#include "src/core/xds/grpc/xds_metadata_parser.h"
 
 namespace grpc_core {
 
@@ -52,6 +53,7 @@ void XdsHttpRouterFilter::PopulateSymtab(upb_DefPool* symtab) const {
 
 absl::optional<XdsHttpFilterImpl::FilterConfig>
 XdsHttpRouterFilter::GenerateFilterConfig(
+    absl::string_view /*instance_name*/,
     const XdsResourceType::DecodeContext& context, XdsExtension extension,
     ValidationErrors* errors) const {
   absl::string_view* serialized_filter_config =
@@ -71,6 +73,7 @@ XdsHttpRouterFilter::GenerateFilterConfig(
 
 absl::optional<XdsHttpFilterImpl::FilterConfig>
 XdsHttpRouterFilter::GenerateFilterConfigOverride(
+    absl::string_view /*instance_name*/,
     const XdsResourceType::DecodeContext& /*context*/,
     XdsExtension /*extension*/, ValidationErrors* errors) const {
   errors->AddError("router filter does not support config override");
@@ -87,6 +90,9 @@ XdsHttpFilterRegistry::XdsHttpFilterRegistry(bool register_builtins) {
     RegisterFilter(std::make_unique<XdsHttpFaultFilter>());
     RegisterFilter(std::make_unique<XdsHttpRbacFilter>());
     RegisterFilter(std::make_unique<XdsHttpStatefulSessionFilter>());
+    if (XdsGcpAuthFilterEnabled()) {
+      RegisterFilter(std::make_unique<XdsHttpGcpAuthnFilter>());
+    }
   }
 }
 

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <grpc/support/port_platform.h>
-
 #include "src/core/client_channel/retry_filter_legacy_call_data.h"
 
+#include <grpc/support/port_platform.h>
 #include <inttypes.h>
 
 #include <memory>
@@ -25,21 +24,12 @@
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
-
 #include "src/core/client_channel/client_channel_internal.h"
 #include "src/core/client_channel/retry_service_config.h"
 #include "src/core/client_channel/retry_throttle.h"
-#include "src/core/lib/backoff/backoff.h"
 #include "src/core/lib/channel/channel_stack.h"
 #include "src/core/lib/channel/status_util.h"
 #include "src/core/lib/debug/trace.h"
-#include "src/core/lib/gprpp/construct_destruct.h"
-#include "src/core/lib/gprpp/debug_location.h"
-#include "src/core/lib/gprpp/orphanable.h"
-#include "src/core/lib/gprpp/ref_counted.h"
-#include "src/core/lib/gprpp/ref_counted_ptr.h"
-#include "src/core/lib/gprpp/status_helper.h"
-#include "src/core/lib/gprpp/time.h"
 #include "src/core/lib/iomgr/call_combiner.h"
 #include "src/core/lib/iomgr/closure.h"
 #include "src/core/lib/iomgr/error.h"
@@ -51,6 +41,14 @@
 #include "src/core/lib/transport/error_utils.h"
 #include "src/core/lib/transport/metadata_batch.h"
 #include "src/core/lib/transport/transport.h"
+#include "src/core/util/backoff.h"
+#include "src/core/util/construct_destruct.h"
+#include "src/core/util/debug_location.h"
+#include "src/core/util/orphanable.h"
+#include "src/core/util/ref_counted.h"
+#include "src/core/util/ref_counted_ptr.h"
+#include "src/core/util/status_helper.h"
+#include "src/core/util/time.h"
 #include "src/core/util/useful.h"
 
 namespace grpc_core {
@@ -1890,7 +1888,7 @@ void RetryFilter::LegacyCallData::StartRetryTimer(
     next_attempt_timeout = *server_pushback;
     retry_backoff_.Reset();
   } else {
-    next_attempt_timeout = retry_backoff_.NextAttemptTime() - Timestamp::Now();
+    next_attempt_timeout = retry_backoff_.NextAttemptDelay();
   }
   GRPC_TRACE_LOG(retry, INFO)
       << "chand=" << chand_ << " calld=" << this << ": retrying failed call in "

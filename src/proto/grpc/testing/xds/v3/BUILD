@@ -23,7 +23,7 @@ exports_files([
 
 grpc_package(
     name = "xds_v3",
-    visibility = "public",
+    visibility = "tests",
 )
 
 grpc_proto_library(
@@ -331,6 +331,8 @@ grpc_proto_library(
     srcs = [
         "csds.proto",
     ],
+    # Needs to be visible to //:grpcpp_csds
+    visibility = ["//:__subpackages__"],
     well_known_protos = True,
     deps = [
         "base_proto",
@@ -349,6 +351,14 @@ grpc_proto_library(
         "percent_proto",
         "route_proto",
     ],
+)
+
+grpc_proto_library(
+    name = "gcp_authn_proto",
+    srcs = [
+        "gcp_authn.proto",
+    ],
+    well_known_protos = True,
 )
 
 grpc_proto_library(

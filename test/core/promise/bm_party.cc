@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <benchmark/benchmark.h>
-
 #include <grpc/grpc.h>
 
 #include "src/core/lib/event_engine/default_event_engine.h"
@@ -34,8 +33,7 @@ BENCHMARK(BM_PartyCreate);
 void BM_AddParticipant(benchmark::State& state) {
   auto party = Party::Make(SimpleArenaAllocator()->MakeArena());
   for (auto _ : state) {
-    party->Spawn(
-        "participant", []() { return Success{}; }, [](StatusFlag) {});
+    party->Spawn("participant", []() { return Success{}; }, [](StatusFlag) {});
   }
 }
 BENCHMARK(BM_AddParticipant);

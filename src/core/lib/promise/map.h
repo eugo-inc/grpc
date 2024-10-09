@@ -15,12 +15,11 @@
 #ifndef GRPC_SRC_CORE_LIB_PROMISE_MAP_H
 #define GRPC_SRC_CORE_LIB_PROMISE_MAP_H
 
+#include <grpc/support/port_platform.h>
 #include <stddef.h>
 
 #include <tuple>
 #include <utility>
-
-#include <grpc/support/port_platform.h>
 
 #include "src/core/lib/promise/detail/promise_like.h"
 #include "src/core/lib/promise/poll.h"
@@ -86,7 +85,7 @@ GPR_ATTRIBUTE_ALWAYS_INLINE_FUNCTION auto CheckDelayed(Promise promise) {
       delayed = true;
       return Pending{};
     }
-    return std::make_tuple(r.value(), delayed);
+    return std::make_tuple(std::move(r.value()), delayed);
   };
 }
 
