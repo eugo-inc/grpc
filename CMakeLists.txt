@@ -5711,13 +5711,12 @@ if(gRPC_INSTALL)
 endif()
 
 add_library(grpc_opencensus_plugin
-  src/cpp/ext/filters/census/channel_filter.cc
   src/cpp/ext/filters/census/client_filter.cc
   src/cpp/ext/filters/census/context.cc
   src/cpp/ext/filters/census/grpc_plugin.cc
   src/cpp/ext/filters/census/measures.cc
   src/cpp/ext/filters/census/rpc_encoding.cc
-  src/cpp/ext/filters/census/server_filter.cc
+  src/cpp/ext/filters/census/server_call_tracer.cc
   src/cpp/ext/filters/census/views.cc
 )
 
