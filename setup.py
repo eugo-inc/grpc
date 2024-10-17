@@ -167,12 +167,12 @@ BUILD_WITH_SYSTEM_RE2 = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_RE2", "False")
 # Export this variable to use the system installation of abseil. You need to
 # have the header files installed (in /usr/include/absl) and during
 # runtime, the shared library must be installed
-BUILD_WITH_SYSTEM_ABSL = os.environ.get("GRPC_PYTHON_BUILD_SYSTEM_ABSL", False)
+BUILD_WITH_SYSTEM_ABSL = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_ABSL", "False")
 
 # Export this variable to use the system installation of grpc. You need to
 # have the header files installed (in /usr/include/grpc) and during
 # runtime, the shared libraries libgrpc and libgpr must be installed
-BUILD_WITH_SYSTEM_GRPC = os.environ.get("GRPC_PYTHON_BUILD_SYSTEM_GRPC", False)
+BUILD_WITH_SYSTEM_GRPC = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_GRPC", "False")
 if BUILD_WITH_SYSTEM_GRPC:
     # Implies building with other system libraries as well
     BUILD_WITH_SYSTEM_OPENSSL = True
