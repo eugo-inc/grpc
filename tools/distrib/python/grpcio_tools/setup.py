@@ -81,7 +81,7 @@ BUILD_WITH_SYSTEM_ABSL = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_ABSL", "False
 # Export this variable to use the system installation of protobuf. You need to
 # have the header files installed (in /usr/include/grpc) and during
 # runtime, the shared libraries libprotoc must be installed
-BUILD_WITH_SYSTEM_PROTOBUF = _env_bool_value("GRPC_BUILD_WITH_SYSTEM_PROTOBUF", "False")
+BUILD_WITH_SYSTEM_PROTOBUF = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_PROTOBUF", "False")
 if BUILD_WITH_SYSTEM_PROTOBUF:
     # Implies building with other system libraries as well
     BUILD_WITH_SYSTEM_CARES = True
