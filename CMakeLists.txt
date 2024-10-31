@@ -25,11 +25,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(PACKAGE_NAME          "grpc")
-set(PACKAGE_VERSION       "1.68.0-dev")
-set(gRPC_CORE_VERSION     "44.0.0")
+set(PACKAGE_VERSION       "1.69.0-dev")
+set(gRPC_CORE_VERSION     "44.1.0")
 set(gRPC_CORE_SOVERSION   "44")
-set(gRPC_CPP_VERSION      "1.68.0-dev")
-set(gRPC_CPP_SOVERSION    "1.68")
+set(gRPC_CPP_VERSION      "1.69.0-dev")
+set(gRPC_CPP_SOVERSION    "1.69")
 set(PACKAGE_STRING        "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME       "${PACKAGE_NAME}-${PACKAGE_VERSION}")
 set(PACKAGE_BUGREPORT     "https://github.com/grpc/grpc/issues/")
@@ -1455,6 +1455,7 @@ if(gRPC_BUILD_TESTS)
   if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_POSIX)
     add_dependencies(buildtests_cxx connected_subchannel_test)
   endif()
+  add_dependencies(buildtests_cxx connection_context_test)
   add_dependencies(buildtests_cxx connection_prefix_bad_client_test)
   add_dependencies(buildtests_cxx connection_refused_test)
   add_dependencies(buildtests_cxx connectivity_state_test)
@@ -1633,6 +1634,7 @@ if(gRPC_BUILD_TESTS)
   add_dependencies(buildtests_cxx loop_test)
   add_dependencies(buildtests_cxx lru_cache_test)
   add_dependencies(buildtests_cxx map_pipe_test)
+  add_dependencies(buildtests_cxx match_promise_test)
   add_dependencies(buildtests_cxx match_test)
   add_dependencies(buildtests_cxx matchers_test)
   add_dependencies(buildtests_cxx max_concurrent_streams_test)
@@ -6601,6 +6603,7 @@ target_link_libraries(activity_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -9259,6 +9262,7 @@ target_link_libraries(call_state_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -12349,6 +12353,58 @@ endif()
 endif()
 if(gRPC_BUILD_TESTS)
 
+add_executable(connection_context_test
+  src/core/lib/surface/connection_context.cc
+  test/core/surface/connection_context_test.cc
+  test/core/test_util/cmdline.cc
+  test/core/test_util/fuzzer_util.cc
+  test/core/test_util/grpc_profiler.cc
+  test/core/test_util/histogram.cc
+  test/core/test_util/mock_endpoint.cc
+  test/core/test_util/parse_hexstring.cc
+  test/core/test_util/resolve_localhost_ip46.cc
+  test/core/test_util/slice_splitter.cc
+  test/core/test_util/tracer_util.cc
+)
+if(WIN32 AND MSVC)
+  if(BUILD_SHARED_LIBS)
+    target_compile_definitions(connection_context_test
+    PRIVATE
+      "GPR_DLL_IMPORTS"
+      "GRPC_DLL_IMPORTS"
+    )
+  endif()
+endif()
+target_compile_features(connection_context_test PUBLIC cxx_std_14)
+target_include_directories(connection_context_test
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${_gRPC_ADDRESS_SORTING_INCLUDE_DIR}
+    ${_gRPC_RE2_INCLUDE_DIR}
+    ${_gRPC_SSL_INCLUDE_DIR}
+    ${_gRPC_UPB_GENERATED_DIR}
+    ${_gRPC_UPB_GRPC_GENERATED_DIR}
+    ${_gRPC_UPB_INCLUDE_DIR}
+    ${_gRPC_XXHASH_INCLUDE_DIR}
+    ${_gRPC_ZLIB_INCLUDE_DIR}
+    third_party/googletest/googletest/include
+    third_party/googletest/googletest
+    third_party/googletest/googlemock/include
+    third_party/googletest/googlemock
+    ${_gRPC_PROTO_GENS_DIR}
+)
+
+target_link_libraries(connection_context_test
+  ${_gRPC_ALLTARGETS_LIBRARIES}
+  gtest
+  grpc_test_util
+)
+
+
+endif()
+if(gRPC_BUILD_TESTS)
+
 add_executable(connection_prefix_bad_client_test
   test/core/bad_client/bad_client.cc
   test/core/bad_client/tests/connection_prefix.cc
@@ -14254,6 +14310,7 @@ target_link_libraries(exec_ctx_wakeup_scheduler_test
   upb_wire_lib
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -18534,6 +18591,7 @@ target_link_libraries(inter_activity_pipe_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -19418,6 +19476,7 @@ target_link_libraries(latch_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -19946,6 +20005,48 @@ target_link_libraries(map_pipe_test
   absl::hash
   absl::type_traits
   absl::statusor
+  gpr
+)
+
+
+endif()
+if(gRPC_BUILD_TESTS)
+
+add_executable(match_promise_test
+  test/core/promise/match_promise_test.cc
+)
+if(WIN32 AND MSVC)
+  if(BUILD_SHARED_LIBS)
+    target_compile_definitions(match_promise_test
+    PRIVATE
+      "GPR_DLL_IMPORTS"
+    )
+  endif()
+endif()
+target_compile_features(match_promise_test PUBLIC cxx_std_14)
+target_include_directories(match_promise_test
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${_gRPC_ADDRESS_SORTING_INCLUDE_DIR}
+    ${_gRPC_RE2_INCLUDE_DIR}
+    ${_gRPC_SSL_INCLUDE_DIR}
+    ${_gRPC_UPB_GENERATED_DIR}
+    ${_gRPC_UPB_GRPC_GENERATED_DIR}
+    ${_gRPC_UPB_INCLUDE_DIR}
+    ${_gRPC_XXHASH_INCLUDE_DIR}
+    ${_gRPC_ZLIB_INCLUDE_DIR}
+    third_party/googletest/googletest/include
+    third_party/googletest/googletest
+    third_party/googletest/googlemock/include
+    third_party/googletest/googlemock
+    ${_gRPC_PROTO_GENS_DIR}
+)
+
+target_link_libraries(match_promise_test
+  ${_gRPC_ALLTARGETS_LIBRARIES}
+  gtest
+  absl::type_traits
   gpr
 )
 
@@ -20860,6 +20961,7 @@ target_link_libraries(mpsc_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -21363,6 +21465,7 @@ target_link_libraries(observable_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -23240,6 +23343,7 @@ target_link_libraries(promise_mutex_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
@@ -33035,6 +33139,7 @@ target_link_libraries(wait_for_callback_test
   gtest
   absl::config
   absl::flat_hash_map
+  absl::function_ref
   absl::hash
   absl::type_traits
   absl::statusor
