@@ -5932,6 +5932,7 @@ targets:
   build: test
   language: c++
   headers:
+  - src/cpp/server/orca/orca_service.h
   - test/cpp/interop/backend_metrics_lb_policy.h
   src:
   - src/proto/grpc/testing/empty.proto
@@ -5968,7 +5969,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -5977,6 +5977,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -6003,13 +6004,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -6034,6 +6035,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: bad_server_response_test
   gtest: true
@@ -6210,7 +6212,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -6219,6 +6220,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -6245,13 +6247,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -6276,6 +6278,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: bitset_test
   gtest: true
@@ -6418,7 +6421,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -6427,6 +6429,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -6453,13 +6456,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -6484,6 +6487,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: call_filters_test
   gtest: true
@@ -6664,7 +6668,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -6673,6 +6676,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -6699,13 +6703,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -6730,6 +6734,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: call_spine_test
   gtest: true
@@ -7397,7 +7402,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -7406,6 +7410,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -7432,13 +7437,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -7463,6 +7468,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cancel_after_client_done_test
   gtest: true
@@ -7476,7 +7482,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -7485,6 +7490,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -7511,13 +7517,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -7542,6 +7548,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cancel_after_invoke_test
   gtest: true
@@ -7556,7 +7563,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -7565,6 +7571,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -7591,13 +7598,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -7622,6 +7629,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cancel_after_round_trip_test
   gtest: true
@@ -7635,7 +7643,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -7644,6 +7651,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -7670,13 +7678,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -7701,6 +7709,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cancel_ares_query_test
   gtest: true
@@ -7731,7 +7740,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -7740,6 +7748,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -7766,13 +7775,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -7797,6 +7806,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cancel_callback_test
   gtest: true
@@ -7914,7 +7924,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -7923,6 +7932,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -7949,13 +7959,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -7980,6 +7990,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cancel_with_status_test
   gtest: true
@@ -7994,7 +8005,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -8003,6 +8013,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -8029,13 +8040,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -8060,6 +8071,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cel_authorization_engine_test
   gtest: true
@@ -8950,6 +8962,7 @@ targets:
   run: false
   language: c++
   headers:
+  - src/cpp/server/orca/orca_service.h
   - test/core/test_util/test_lb_policies.h
   - test/cpp/end2end/connection_attempt_injector.h
   - test/cpp/end2end/test_service_impl.h
@@ -9004,7 +9017,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -9013,6 +9025,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -9039,13 +9052,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -9070,6 +9083,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: cmdline_test
   gtest: true
@@ -9194,7 +9208,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -9203,6 +9216,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -9229,13 +9243,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -9260,6 +9274,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: compression_test
   gtest: true
@@ -9402,7 +9417,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -9411,6 +9425,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -9437,13 +9452,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -9468,6 +9483,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: context_allocator_end2end_test
   gtest: true
@@ -9595,7 +9611,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -9604,6 +9619,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -9630,13 +9646,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -9661,6 +9677,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: delegating_channel_test
   gtest: true
@@ -9715,7 +9732,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -9724,6 +9740,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -9750,13 +9767,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -9781,6 +9798,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: dns_resolver_cooldown_test
   gtest: true
@@ -9882,7 +9900,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -9891,6 +9908,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -9917,13 +9935,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -9948,6 +9966,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: end2end_test
   gtest: true
@@ -10434,7 +10453,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -10443,6 +10461,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -10469,13 +10488,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -10500,6 +10519,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: filter_init_fails_test
   gtest: true
@@ -10513,7 +10533,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -10522,6 +10541,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -10548,13 +10568,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -10579,6 +10599,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: filter_test_test
   gtest: true
@@ -10610,7 +10631,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -10619,6 +10639,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -10645,13 +10666,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -10676,6 +10697,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: flaky_network_test
   gtest: true
@@ -11175,7 +11197,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -11184,6 +11205,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -11210,13 +11232,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -11241,6 +11263,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: graceful_shutdown_test
   gtest: true
@@ -11390,7 +11413,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -11399,6 +11421,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -11425,13 +11448,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -11456,6 +11479,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: grpc_byte_buffer_reader_test
   gtest: true
@@ -11977,7 +12001,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -11986,6 +12009,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -12012,13 +12036,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -12043,6 +12067,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: histogram_test
   gtest: true
@@ -12187,7 +12212,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -12196,6 +12220,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -12222,13 +12247,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -12253,6 +12278,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: http2_client
   build: test
@@ -12362,7 +12388,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -12371,6 +12396,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -12397,13 +12423,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -12428,6 +12454,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: http_proxy_mapper_test
   gtest: true
@@ -12826,6 +12853,7 @@ targets:
   run: false
   language: c++
   headers:
+  - src/cpp/server/orca/orca_service.h
   - test/cpp/interop/server_helper.h
   src:
   - src/proto/grpc/testing/empty.proto
@@ -12862,7 +12890,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -12871,6 +12898,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -12897,13 +12925,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -12928,6 +12956,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: iocp_test
   gtest: true
@@ -13083,7 +13112,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -13092,6 +13120,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -13118,13 +13147,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -13149,6 +13178,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: lame_client_test
   gtest: true
@@ -13174,7 +13204,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -13183,6 +13212,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -13209,13 +13239,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -13240,6 +13270,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: latch_test
   gtest: true
@@ -13585,6 +13616,7 @@ targets:
   headers:
   - src/core/lib/promise/detail/promise_factory.h
   - src/core/lib/promise/detail/promise_like.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/match_promise.h
   - src/core/lib/promise/poll.h
   - src/core/lib/promise/promise.h
@@ -13650,7 +13682,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -13659,6 +13690,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -13685,13 +13717,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -13716,6 +13748,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: max_connection_age_test
   gtest: true
@@ -13729,7 +13762,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -13738,6 +13770,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -13764,13 +13797,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -13795,6 +13828,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: max_connection_idle_test
   gtest: true
@@ -13808,7 +13842,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -13817,6 +13850,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -13843,13 +13877,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -13874,6 +13908,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: max_message_length_test
   gtest: true
@@ -13887,7 +13922,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -13896,6 +13930,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -13922,13 +13957,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -13953,6 +13988,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: memory_quota_stress_test
   gtest: true
@@ -14156,6 +14192,7 @@ targets:
   - src/core/lib/promise/mpsc.h
   - src/core/lib/promise/poll.h
   - src/core/lib/promise/promise.h
+  - src/core/lib/promise/status_flag.h
   - src/core/lib/promise/wait_set.h
   - src/core/util/atomic_utils.h
   - src/core/util/down_cast.h
@@ -14214,7 +14251,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -14223,6 +14259,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -14249,13 +14286,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -14280,6 +14317,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: no_destruct_test
   gtest: true
@@ -14305,7 +14343,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -14314,6 +14351,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -14340,13 +14378,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -14371,6 +14409,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: no_op_test
   gtest: true
@@ -14384,7 +14423,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -14393,6 +14431,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -14419,13 +14458,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -14450,6 +14489,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: no_server_test
   gtest: true
@@ -14579,7 +14619,8 @@ targets:
   gtest: true
   build: test
   language: c++
-  headers: []
+  headers:
+  - src/cpp/server/orca/orca_service.h
   src:
   - src/proto/grpc/testing/xds/v3/orca_service.proto
   - third_party/googleapis/google/api/annotations.proto
@@ -14589,6 +14630,18 @@ targets:
   - third_party/xds/xds/data/orca/v3/orca_load_report.proto
   - src/cpp/server/orca/orca_service.cc
   - test/cpp/end2end/orca_service_end2end_test.cc
+  deps:
+  - gtest
+  - grpc++_test_util
+- name: orca_service_test
+  gtest: true
+  build: test
+  language: c++
+  headers:
+  - src/cpp/server/orca/orca_service.h
+  src:
+  - src/cpp/server/orca/orca_service.cc
+  - test/cpp/server/orca_service_test.cc
   deps:
   - gtest
   - grpc++_test_util
@@ -14797,7 +14850,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -14806,6 +14858,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -14832,13 +14885,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -14863,6 +14916,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: percent_encoding_test
   gtest: true
@@ -15050,7 +15104,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -15059,6 +15112,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -15085,13 +15139,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -15116,6 +15170,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: ping_rate_policy_test
   gtest: true
@@ -15159,7 +15214,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -15168,6 +15222,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -15194,13 +15249,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -15225,6 +15280,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: pipe_test
   gtest: true
@@ -15739,7 +15795,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -15748,6 +15803,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -15774,13 +15830,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -15805,6 +15861,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: qps_json_driver
   build: test
@@ -16016,7 +16073,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16025,6 +16081,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16051,13 +16108,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16082,6 +16139,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: remove_stream_from_stalled_lists_test
   gtest: true
@@ -16277,7 +16335,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16286,6 +16343,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16312,13 +16370,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16343,6 +16401,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: request_with_payload_test
   gtest: true
@@ -16356,7 +16415,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16365,6 +16423,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16391,13 +16450,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16422,6 +16481,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: resolve_address_using_ares_resolver_posix_test
   gtest: true
@@ -16587,7 +16647,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16596,6 +16655,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16622,13 +16682,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16653,6 +16713,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: resource_quota_test
   gtest: true
@@ -16677,7 +16738,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16686,6 +16746,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16712,13 +16773,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16743,6 +16804,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_cancel_during_delay_test
   gtest: true
@@ -16756,7 +16818,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16765,6 +16826,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16791,13 +16853,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16822,6 +16884,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_cancel_with_multiple_send_batches_test
   gtest: true
@@ -16835,7 +16898,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16844,6 +16906,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16870,13 +16933,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16901,6 +16964,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_cancellation_test
   gtest: true
@@ -16914,7 +16978,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -16923,6 +16986,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -16949,13 +17013,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -16980,6 +17044,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_disabled_test
   gtest: true
@@ -16993,7 +17058,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17002,6 +17066,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17028,13 +17093,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17059,6 +17124,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_exceeds_buffer_size_in_delay_test
   gtest: true
@@ -17072,7 +17138,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17081,6 +17146,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17107,13 +17173,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17138,6 +17204,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_exceeds_buffer_size_in_initial_batch_test
   gtest: true
@@ -17151,7 +17218,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17160,6 +17226,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17186,13 +17253,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17217,6 +17284,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_exceeds_buffer_size_in_subsequent_batch_test
   gtest: true
@@ -17230,7 +17298,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17239,6 +17306,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17265,13 +17333,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17296,6 +17364,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_lb_drop_test
   gtest: true
@@ -17309,7 +17378,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17318,6 +17386,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17344,13 +17413,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17375,6 +17444,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_lb_fail_test
   gtest: true
@@ -17388,7 +17458,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17397,6 +17466,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17423,13 +17493,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17454,6 +17524,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_non_retriable_status_before_trailers_test
   gtest: true
@@ -17467,7 +17538,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17476,6 +17546,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17502,13 +17573,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17533,6 +17604,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_non_retriable_status_test
   gtest: true
@@ -17546,7 +17618,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17555,6 +17626,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17581,13 +17653,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17612,6 +17684,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_per_attempt_recv_timeout_on_last_attempt_test
   gtest: true
@@ -17625,7 +17698,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17634,6 +17706,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17660,13 +17733,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17691,6 +17764,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_per_attempt_recv_timeout_test
   gtest: true
@@ -17704,7 +17778,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17713,6 +17786,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17739,13 +17813,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17770,6 +17844,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_recv_initial_metadata_test
   gtest: true
@@ -17783,7 +17858,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17792,6 +17866,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17818,13 +17893,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17849,6 +17924,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_recv_message_replay_test
   gtest: true
@@ -17862,7 +17938,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17871,6 +17946,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17897,13 +17973,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -17928,6 +18004,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_recv_message_test
   gtest: true
@@ -17941,7 +18018,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -17950,6 +18026,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -17976,13 +18053,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18007,6 +18084,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_recv_trailing_metadata_error_test
   gtest: true
@@ -18020,7 +18098,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18029,6 +18106,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18055,13 +18133,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18086,6 +18164,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_send_initial_metadata_refs_test
   gtest: true
@@ -18099,7 +18178,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18108,6 +18186,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18134,13 +18213,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18165,6 +18244,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_send_op_fails_test
   gtest: true
@@ -18178,7 +18258,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18187,6 +18266,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18213,13 +18293,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18244,6 +18324,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_send_recv_batch_test
   gtest: true
@@ -18257,7 +18338,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18266,6 +18346,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18292,13 +18373,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18323,6 +18404,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_server_pushback_delay_test
   gtest: true
@@ -18336,7 +18418,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18345,6 +18426,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18371,13 +18453,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18402,6 +18484,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_server_pushback_disabled_test
   gtest: true
@@ -18415,7 +18498,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18424,6 +18506,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18450,13 +18533,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18481,6 +18564,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_service_config_test
   gtest: true
@@ -18505,7 +18589,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18514,6 +18597,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18540,13 +18624,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18571,6 +18655,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_streaming_succeeds_before_replay_finished_test
   gtest: true
@@ -18584,7 +18669,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18593,6 +18677,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18619,13 +18704,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18650,6 +18735,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_streaming_test
   gtest: true
@@ -18663,7 +18749,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18672,6 +18757,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18698,13 +18784,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18729,6 +18815,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_test
   gtest: true
@@ -18742,7 +18829,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18751,6 +18837,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18777,13 +18864,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18808,6 +18895,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_throttle_test
   gtest: true
@@ -18832,7 +18920,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18841,6 +18928,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18867,13 +18955,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18898,6 +18986,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_too_many_attempts_test
   gtest: true
@@ -18911,7 +19000,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18920,6 +19008,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -18946,13 +19035,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -18977,6 +19066,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_transparent_goaway_test
   gtest: true
@@ -18990,7 +19080,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -18999,6 +19088,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19025,13 +19115,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -19056,6 +19146,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_transparent_max_concurrent_streams_test
   gtest: true
@@ -19069,7 +19160,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -19078,6 +19168,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19104,13 +19195,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -19135,6 +19226,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_transparent_not_sent_on_wire_test
   gtest: true
@@ -19148,7 +19240,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -19157,6 +19248,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19183,13 +19275,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -19214,6 +19306,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_unref_before_finish_test
   gtest: true
@@ -19227,7 +19320,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -19236,6 +19328,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19262,13 +19355,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -19293,6 +19386,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: retry_unref_before_recv_test
   gtest: true
@@ -19306,7 +19400,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -19315,6 +19408,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19341,13 +19435,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -19372,6 +19466,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: ring_buffer_test
   gtest: true
@@ -19788,7 +19883,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -19797,6 +19891,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19823,13 +19918,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -19854,6 +19949,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: server_interceptors_end2end_test
   gtest: true
@@ -19961,7 +20057,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -19970,6 +20065,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -19996,13 +20092,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20027,6 +20123,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: server_test
   gtest: true
@@ -20110,7 +20207,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -20119,6 +20215,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -20145,13 +20242,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20176,6 +20273,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: shutdown_finishes_tags_test
   gtest: true
@@ -20189,7 +20287,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -20198,6 +20295,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -20224,13 +20322,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20255,6 +20353,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: shutdown_test
   gtest: true
@@ -20287,7 +20386,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -20296,6 +20394,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -20322,13 +20421,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20353,6 +20452,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: simple_metadata_test
   gtest: true
@@ -20366,7 +20466,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -20375,6 +20474,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -20401,13 +20501,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20432,6 +20532,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: simple_request_bad_client_test
   gtest: true
@@ -20459,7 +20560,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -20468,6 +20568,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -20494,13 +20595,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20525,6 +20626,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: single_set_ptr_test
   gtest: true
@@ -20835,7 +20937,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -20844,6 +20945,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -20870,13 +20972,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -20901,6 +21003,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: streaming_throughput_test
   gtest: true
@@ -20997,6 +21100,7 @@ targets:
   headers:
   - src/core/lib/promise/detail/promise_factory.h
   - src/core/lib/promise/detail/promise_like.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/if.h
   - src/core/lib/promise/poll.h
   - src/core/lib/promise/switch.h
@@ -21219,7 +21323,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -21228,6 +21331,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -21254,13 +21358,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -21285,6 +21389,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: test_core_event_engine_posix_timer_heap_test
   gtest: true
@@ -21493,6 +21598,7 @@ targets:
   - src/core/ext/transport/chaotic_good/frame.h
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server_transport.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -21505,6 +21611,7 @@ targets:
   - test/core/event_engine/fuzzing_event_engine/fuzzing_event_engine.h
   - test/core/transport/test_suite/transport_test.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - test/core/event_engine/fuzzing_event_engine/fuzzing_event_engine.proto
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
@@ -21588,7 +21695,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -21597,6 +21703,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -21607,13 +21714,13 @@ targets:
   - src/core/lib/transport/promise_endpoint.h
   - src/cpp/ext/chaotic_good.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -21803,7 +21910,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -21812,6 +21918,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -21838,13 +21945,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -21869,6 +21976,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: timeout_encoding_test
   gtest: true
@@ -22055,7 +22163,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -22064,6 +22171,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -22090,13 +22198,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -22121,6 +22229,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: transport_security_common_api_test
   gtest: true
@@ -22481,7 +22590,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -22490,6 +22598,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -22516,13 +22625,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -22547,6 +22656,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: write_buffering_test
   gtest: true
@@ -22560,7 +22670,6 @@ targets:
   - src/core/ext/transport/chaotic_good/frame_header.h
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good/server_transport.h
-  - src/core/ext/transport/chaotic_good/settings_metadata.h
   - src/core/ext/transport/chaotic_good_legacy/chaotic_good_transport.h
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.h
   - src/core/ext/transport/chaotic_good_legacy/client_transport.h
@@ -22569,6 +22678,7 @@ targets:
   - src/core/ext/transport/chaotic_good_legacy/server/chaotic_good_server.h
   - src/core/ext/transport/chaotic_good_legacy/server_transport.h
   - src/core/ext/transport/chaotic_good_legacy/settings_metadata.h
+  - src/core/lib/promise/detail/promise_variant.h
   - src/core/lib/promise/event_engine_wakeup_scheduler.h
   - src/core/lib/promise/inter_activity_latch.h
   - src/core/lib/promise/inter_activity_pipe.h
@@ -22595,13 +22705,13 @@ targets:
   - test/core/test_util/fake_stats_plugin.h
   - test/core/test_util/test_lb_policies.h
   src:
+  - src/core/ext/transport/chaotic_good/chaotic_good_frame.proto
   - src/core/ext/transport/chaotic_good/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good/client_transport.cc
   - src/core/ext/transport/chaotic_good/frame.cc
   - src/core/ext/transport/chaotic_good/frame_header.cc
   - src/core/ext/transport/chaotic_good/server/chaotic_good_server.cc
   - src/core/ext/transport/chaotic_good/server_transport.cc
-  - src/core/ext/transport/chaotic_good/settings_metadata.cc
   - src/core/ext/transport/chaotic_good_legacy/client/chaotic_good_connector.cc
   - src/core/ext/transport/chaotic_good_legacy/client_transport.cc
   - src/core/ext/transport/chaotic_good_legacy/frame.cc
@@ -22626,6 +22736,7 @@ targets:
   - gtest
   - grpc_authorization_provider
   - grpc_unsecure
+  - protobuf
   - grpc_test_util
 - name: write_size_policy_test
   gtest: true
