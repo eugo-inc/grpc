@@ -29,8 +29,7 @@
 #include "src/core/lib/event_engine/posix_engine/wakeup_fd_posix.h"
 #include "src/core/util/sync.h"
 
-namespace grpc_event_engine {
-namespace experimental {
+namespace grpc_event_engine::experimental {
 
 class PollEventHandle;
 
@@ -38,9 +37,8 @@ class PollEventHandle;
 class PollPoller : public PosixEventPoller,
                    public std::enable_shared_from_this<PollPoller> {
  public:
-  explicit PollPoller(Scheduler* scheduler);
-  PollPoller(Scheduler* scheduler, bool use_phony_poll);
-  EventHandle* CreateHandle(int fd, absl::string_view name,
+  explicit PollPoller(Scheduler* scheduler, bool use_phony_poll = false);
+  EventHandle* CreateHandle(FileDescriptor fd, absl::string_view name,
                             bool track_err) override;
   Poller::WorkResult Work(
       grpc_event_engine::experimental::EventEngine::Duration timeout,
@@ -48,16 +46,15 @@ class PollPoller : public PosixEventPoller,
   std::string Name() override { return "poll"; }
   void Kick() override;
   Scheduler* GetScheduler() { return scheduler_; }
-  void Shutdown() override;
   bool CanTrackErrors() const override { return false; }
   ~PollPoller() override;
 
-  // Forkable
-  void PrepareFork() override;
-  void PostforkParent() override;
-  void PostforkChild() override;
-
   void Close();
+
+#ifdef GRPC_ENABLE_FORK_SUPPORT
+  void HandleForkInChild() override;
+#endif  // GRPC_ENABLE_FORK_SUPPORT
+  void ResetKickState() override;
 
  private:
   void KickExternal(bool ext);
@@ -91,7 +88,6 @@ class PollPoller : public PosixEventPoller,
 std::shared_ptr<PollPoller> MakePollPoller(Scheduler* scheduler,
                                            bool use_phony_poll);
 
-}  // namespace experimental
-}  // namespace grpc_event_engine
+}  // namespace grpc_event_engine::experimental
 
 #endif  // GRPC_SRC_CORE_LIB_EVENT_ENGINE_POSIX_ENGINE_EV_POLL_POSIX_H

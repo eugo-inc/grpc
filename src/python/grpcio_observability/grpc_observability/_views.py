@@ -178,7 +178,7 @@ def client_api_latency(labels: Mapping[str, str]) -> view_module.View:
 
 
 def client_sent_compressed_message_bytes_per_rpc(
-    labels: Mapping[str, str]
+    labels: Mapping[str, str],
 ) -> view_module.View:
     view = view_module.View(
         "grpc.io/client/sent_compressed_message_bytes_per_rpc",
@@ -193,7 +193,7 @@ def client_sent_compressed_message_bytes_per_rpc(
 
 
 def client_received_compressed_message_bytes_per_rpc(
-    labels: Mapping[str, str]
+    labels: Mapping[str, str],
 ) -> view_module.View:
     view = view_module.View(
         "grpc.io/client/received_compressed_message_bytes_per_rpc",
@@ -234,7 +234,7 @@ def server_completed_rpcs(labels: Mapping[str, str]) -> view_module.View:
 
 
 def server_sent_compressed_message_bytes_per_rpc(
-    labels: Mapping[str, str]
+    labels: Mapping[str, str],
 ) -> view_module.View:
     view = view_module.View(
         "grpc.io/server/sent_compressed_message_bytes_per_rpc",
@@ -249,7 +249,7 @@ def server_sent_compressed_message_bytes_per_rpc(
 
 
 def server_received_compressed_message_bytes_per_rpc(
-    labels: Mapping[str, str]
+    labels: Mapping[str, str],
 ) -> view_module.View:
     view = view_module.View(
         "grpc.io/server/received_compressed_message_bytes_per_rpc",
@@ -267,7 +267,7 @@ def server_server_latency(labels: Mapping[str, str]) -> view_module.View:
     view = view_module.View(
         "grpc.io/server/server_latency",
         "The total time taken by an RPC from server transport's"
-        + " (HTTP2 / inproc / cronet) perspective.",
+        + " (HTTP2 / inproc) perspective.",
         [TagKey(key) for key in labels.keys()]
         + [server_method_tag_key(), server_status_tag_key()],
         _measures.SERVER_SERVER_LATENCY_MEASURE,

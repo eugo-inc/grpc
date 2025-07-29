@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <grpc/grpc.h>
-#include <gtest/gtest.h>
 
 #include <memory>
 
+#include "gtest/gtest.h"
 #include "src/core/lib/event_engine/posix_engine/posix_engine.h"
 #include "test/core/event_engine/test_suite/event_engine_test_framework.h"
 #include "test/core/event_engine/test_suite/posix/oracle_event_engine_posix.h"
@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
   grpc::testing::TestEnvironment env(&argc, argv);
   SetEventEngineFactories(
       []() {
-        return std::make_unique<
-            grpc_event_engine::experimental::PosixEventEngine>();
+        return grpc_event_engine::experimental::PosixEventEngine::
+            MakePosixEventEngine();
       },
       []() {
         return std::make_unique<

@@ -34,6 +34,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "src/core/ext/transport/chttp2/transport/http2_settings.h"
+#include "src/core/ext/transport/chttp2/transport/http2_settings_manager.h"
 #include "src/core/lib/experiments/experiments.h"
 #include "src/core/lib/resource_quota/memory_quota.h"
 #include "src/core/util/useful.h"
@@ -330,7 +331,7 @@ std::string TransportFlowControl::Stats::ToString() const {
 
 void StreamFlowControl::SentUpdate(uint32_t announce) {
   TransportFlowControl::IncomingUpdateContext tfc_upd(tfc_);
-  pending_size_ = absl::nullopt;
+  pending_size_ = std::nullopt;
   tfc_upd.UpdateAnnouncedWindowDelta(&announced_window_delta_, announce);
   CHECK_EQ(DesiredAnnounceSize(), 0u);
   std::ignore = tfc_upd.MakeAction();

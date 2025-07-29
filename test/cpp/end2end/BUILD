@@ -31,6 +31,7 @@ grpc_cc_library(
         "absl/log:check",
         "absl/synchronization",
     ],
+    visibility = ["//bazel:end2end_test_utils"],
     deps = [
         "//src/proto/grpc/testing:echo_cc_grpc",
         "//test/core/test_util:grpc_test_util",
@@ -156,6 +157,25 @@ grpc_cc_test(
 )
 
 grpc_cc_test(
+    name = "latent_see_service_test",
+    srcs = ["latent_see_service_test.cc"],
+    external_deps = [
+        "absl/log:check",
+        "gtest",
+    ],
+    deps = [
+        "//:gpr",
+        "//:grpc",
+        "//:grpc++",
+        "//:grpcpp_latent_see_client",
+        "//:grpcpp_latent_see_service",
+        "//src/proto/grpc/channelz/v2:latent_see_cc_grpc",
+        "//test/core/test_util:grpc_test_util",
+        "//test/cpp/util:test_util",
+    ],
+)
+
+grpc_cc_test(
     name = "client_crash_test",
     srcs = ["client_crash_test.cc"],
     data = [
@@ -166,6 +186,7 @@ grpc_cc_test(
         "gtest",
     ],
     tags = [
+        "grpc:fails-internally",
         "no_test_android",  # android_cc_test doesn't work with data dependency.
         "no_test_ios",
         "no_windows",
@@ -333,7 +354,10 @@ grpc_cc_test(
     # iOS. Figure out why.
     tags = [
         "cpp_end2end_test",
+        # b/117517566.
+        "grpc:no-internal-poller",
         "no_test_ios",
+        "channelz_test",
     ],
     deps = [
         ":test_service_impl",
@@ -343,6 +367,45 @@ grpc_cc_test(
         "//:grpcpp_channelz",
         "//src/core:slice",
         "//src/proto/grpc/channelz:channelz_proto",
+        "//src/proto/grpc/testing:echo_cc_grpc",
+        "//src/proto/grpc/testing:echo_messages_cc_proto",
+        "//test/core/event_engine:event_engine_test_utils",
+        "//test/core/test_util:grpc_test_util",
+        "//test/cpp/util:test_util",
+    ],
+)
+
+grpc_cc_test(
+    name = "channelz_v2_service_test",
+    srcs = ["channelz_v2_service_test.cc"],
+    data = [
+        "//src/core/tsi/test_creds:ca.pem",
+        "//src/core/tsi/test_creds:client.key",
+        "//src/core/tsi/test_creds:client.pem",
+        "//src/core/tsi/test_creds:server1.key",
+        "//src/core/tsi/test_creds:server1.pem",
+    ],
+    external_deps = [
+        "absl/log:check",
+        "gtest",
+    ],
+    # TODO(yulin-liang): The test is not able to load the certificate files on
+    # iOS. Figure out why.
+    tags = [
+        "cpp_end2end_test",
+        # b/117517566.
+        "grpc:no-internal-poller",
+        "no_test_ios",
+    ],
+    deps = [
+        ":test_service_impl",
+        "//:gpr",
+        "//:grpc",
+        "//:grpc++",
+        "//:grpcpp_channelz",
+        "//src/core:slice",
+        "//src/proto/grpc/channelz/v2:channelz_cc_proto",
+        "//src/proto/grpc/channelz/v2:service_cc_grpc",
         "//src/proto/grpc/testing:echo_cc_grpc",
         "//src/proto/grpc/testing:echo_messages_cc_proto",
         "//test/core/event_engine:event_engine_test_utils",
@@ -428,7 +491,13 @@ grpc_cc_test(
     external_deps = [
         "gtest",
     ],
-    tags = ["cpp_end2end_test"],
+    tags = [
+        "cpp_end2end_test",
+        # Will fail as sync health check service is enabled by default internally, which is however
+        # disabled in OSS:
+        # b/117623310.
+        "grpc:no-internal-poller",
+    ],
     deps = [
         ":test_health_check_service_impl",
         ":test_service_impl",
@@ -537,6 +606,8 @@ grpc_cc_test(
     tags = [
         "cpp_end2end_test",
         "cpp_lb_end2end_test",
+        # b/117575949.
+        "grpc:no-internal-poller",
         "no_windows",
     ],  # TODO(jtattermusch): fix test on windows
     deps = [
@@ -555,6 +626,7 @@ grpc_cc_test(
         "//src/proto/grpc/testing:echo_messages_cc_proto",
         "//src/proto/grpc/testing/duplicate:echo_duplicate_cc_grpc",
         "//test/core/test_util:grpc_test_util",
+        "//test/core/test_util:postmortem",
         "//test/core/test_util:test_lb_policies",
         "//test/cpp/util:test_util",
         "@com_github_cncf_xds//xds/data/orca/v3:pkg_cc_proto",
@@ -566,7 +638,6 @@ grpc_cc_test(
     srcs = ["rls_end2end_test.cc"],
     external_deps = [
         "absl/log:check",
-        "absl/types:optional",
         "gtest",
     ],
     flaky = True,
@@ -589,6 +660,7 @@ grpc_cc_test(
         "//test/core/event_engine:event_engine_test_utils",
         "//test/core/test_util:fake_stats_plugin",
         "//test/core/test_util:grpc_test_util",
+        "//test/core/test_util:test_call_creds",
         "//test/core/test_util:test_lb_policies",
         "//test/cpp/util:test_config",
         "//test/cpp/util:test_util",
@@ -645,6 +717,7 @@ grpc_cc_test(
         "//src/proto/grpc/testing:echo_messages_cc_proto",
         "//src/proto/grpc/testing/duplicate:echo_duplicate_cc_grpc",
         "//test/core/test_util:grpc_test_util",
+        "//test/core/test_util:test_call_creds",
         "//test/cpp/util:test_config",
         "//test/cpp/util:test_util",
     ],
@@ -656,7 +729,11 @@ grpc_cc_test(
     external_deps = [
         "gtest",
     ],
-    tags = ["cpp_end2end_test"],
+    tags = [
+        "cpp_end2end_test",
+        # b/117623310.
+        "grpc:no-internal-poller",
+    ],
     deps = [
         ":test_service_impl",
         "//:gpr",
@@ -703,6 +780,7 @@ grpc_cc_test(
         "gtest",
     ],
     tags = [
+        "grpc:fails-internally",
         "no_test_android",  # android_cc_test doesn't work with data dependency.
         "no_test_ios",
         "no_windows",
@@ -747,7 +825,9 @@ grpc_cc_test(
     external_deps = [
         "gtest",
     ],
-    tags = ["cpp_end2end_test"],
+    tags = [
+        "cpp_end2end_test",
+    ],
     deps = [
         ":interceptors_util",
         ":test_service_impl",
@@ -769,6 +849,8 @@ grpc_cc_test(
     ],
     tags = [
         "cpp_end2end_test",
+        # TODO(b/264692543): Re-enable after fixing
+        "grpc:broken-internally",
         "no_test_ios",
         "no_windows",
     ],
@@ -792,6 +874,8 @@ grpc_cc_test(
         "manual",
         "exclusive",
         "no_test_ios",
+        # Needs root (not available internally).
+        "grpc:fails-internally",
     ],
     deps = [
         ":test_service_impl",
@@ -886,6 +970,8 @@ grpc_cc_test(
         "exclusive",
         "no_test_android",
         "no_test_ios",
+        # Needs root (not available internally).
+        "grpc:fails-internally",
     ],
     deps = [
         ":test_service_impl",
@@ -907,7 +993,11 @@ grpc_cc_test(
         "absl/log:check",
         "gtest",
     ],
-    tags = ["cpp_end2end_test"],
+    tags = [
+        "cpp_end2end_test",
+        # This test only works with the open source protobuf.
+        "grpc:broken-internally",
+    ],
     deps = [
         ":test_service_impl",
         "//:gpr",
@@ -1092,6 +1182,7 @@ grpc_cc_test(
         "//src/proto/grpc/testing:echo_cc_grpc",
         "//src/proto/grpc/testing:echo_messages_cc_proto",
         "//test/core/test_util:grpc_test_util",
+        "//test/core/test_util:postmortem",
         "//test/cpp/util:test_util",
     ],
 )

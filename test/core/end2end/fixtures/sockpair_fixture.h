@@ -27,10 +27,10 @@
 #include "absl/status/statusor.h"
 #include "gtest/gtest.h"
 #include "src/core/channelz/channelz.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/ext/transport/chttp2/transport/chttp2_transport.h"
 #include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/channel/channel_args_preconditioning.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/iomgr/endpoint.h"
 #include "src/core/lib/iomgr/endpoint_pair.h"
 #include "src/core/lib/iomgr/error.h"
@@ -85,7 +85,7 @@ class SockpairFixture : public CoreTestFixture {
                                              std::move(server_endpoint), false);
     Server* core_server = Server::FromC(server);
     grpc_error_handle error = core_server->SetupTransport(
-        transport, nullptr, core_server->channel_args(), nullptr);
+        transport, nullptr, core_server->channel_args());
     if (error.ok()) {
       grpc_chttp2_transport_start_reading(transport, nullptr, nullptr, nullptr,
                                           nullptr);

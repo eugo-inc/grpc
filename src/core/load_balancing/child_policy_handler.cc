@@ -27,8 +27,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/lib/channel/channel_args.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/iomgr/pollset_set.h"
 #include "src/core/lib/iomgr/resolved_address.h"
 #include "src/core/lib/transport/connectivity_state.h"
@@ -102,11 +102,10 @@ class ChildPolicyHandler::Helper final
     parent()->channel_control_helper()->RequestReresolution();
   }
 
-  void AddTraceEvent(TraceSeverity severity,
-                     absl::string_view message) override {
+  void AddTraceEvent(absl::string_view message) override {
     if (parent()->shutting_down_) return;
     if (!CalledByPendingChild() && !CalledByCurrentChild()) return;
-    parent()->channel_control_helper()->AddTraceEvent(severity, message);
+    parent()->channel_control_helper()->AddTraceEvent(message);
   }
 
   void set_child(LoadBalancingPolicy* child) { child_ = child; }
@@ -289,7 +288,6 @@ OrphanablePtr<LoadBalancingPolicy> ChildPolicyHandler::CreateChildPolicy(
               << lb_policy.get() << ")";
   }
   channel_control_helper()->AddTraceEvent(
-      ChannelControlHelper::TRACE_INFO,
       absl::StrCat("Created new LB policy \"", child_policy_name, "\""));
   grpc_pollset_set_add_pollset_set(lb_policy->interested_parties(),
                                    interested_parties());

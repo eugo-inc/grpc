@@ -16,20 +16,15 @@
 //
 //
 
-#include <grpc/impl/grpc_types.h>
 #include <grpc/support/port_platform.h>
 
-#include "absl/base/thread_annotations.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "src/core/lib/iomgr/exec_ctx.h"
 #include "src/core/lib/iomgr/port.h"
 
 #ifdef GRPC_POSIX_SOCKET_TCP
 
 #include <errno.h>
+#include <grpc/event_engine/endpoint_config.h>
+#include <grpc/event_engine/event_engine.h>
 #include <grpc/slice.h>
 #include <grpc/support/alloc.h>
 #include <grpc/support/string_util.h>
@@ -47,20 +42,27 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <optional>
 #include <unordered_map>
 
+#include "absl/base/thread_annotations.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+#include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "src/core/lib/address_utils/sockaddr_utils.h"
+#include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/debug/trace.h"
+#include "src/core/lib/event_engine/extensions/supports_fd.h"
+#include "src/core/lib/event_engine/query_extensions.h"
+#include "src/core/lib/event_engine/shim.h"
 #include "src/core/lib/experiments/experiments.h"
 #include "src/core/lib/iomgr/buffer_list.h"
 #include "src/core/lib/iomgr/ev_posix.h"
 #include "src/core/lib/iomgr/event_engine_shims/endpoint.h"
-#include "src/core/lib/iomgr/executor.h"
 #include "src/core/lib/iomgr/socket_utils_posix.h"
 #include "src/core/lib/iomgr/tcp_posix.h"
-#include "src/core/lib/resource_quota/api.h"
 #include "src/core/lib/resource_quota/memory_quota.h"
 #include "src/core/lib/slice/slice_internal.h"
 #include "src/core/lib/slice/slice_string_helpers.h"
@@ -72,7 +74,6 @@
 #include "src/core/util/string.h"
 #include "src/core/util/sync.h"
 #include "src/core/util/time.h"
-#include "src/core/util/useful.h"
 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
@@ -556,7 +557,8 @@ struct grpc_tcp {
 
 struct backup_poller {
   gpr_mu* pollset_mu;
-  grpc_closure run_poller;
+  grpc_closure done_poller;
+  std::shared_ptr<grpc_event_engine::experimental::EventEngine> engine;
 };
 
 void LogCommonIOErrors(absl::string_view prefix, int error_no) {
@@ -617,11 +619,11 @@ static void done_poller(void* bp, grpc_error_handle /*error_ignored*/) {
   backup_poller* p = static_cast<backup_poller*>(bp);
   GRPC_TRACE_LOG(tcp, INFO) << "BACKUP_POLLER:" << p << " destroy";
   grpc_pollset_destroy(BACKUP_POLLER_POLLSET(p));
+  p->engine.reset();
   gpr_free(p);
 }
 
-static void run_poller(void* bp, grpc_error_handle /*error_ignored*/) {
-  backup_poller* p = static_cast<backup_poller*>(bp);
+static void run_poller(backup_poller* p) {
   GRPC_TRACE_LOG(tcp, INFO) << "BACKUP_POLLER:" << p << " run";
   gpr_mu_lock(p->pollset_mu);
   grpc_core::Timestamp deadline =
@@ -639,14 +641,15 @@ static void run_poller(void* bp, grpc_error_handle /*error_ignored*/) {
     g_backup_poller_mu->Unlock();
     GRPC_TRACE_LOG(tcp, INFO) << "BACKUP_POLLER:" << p << " shutdown";
     grpc_pollset_shutdown(BACKUP_POLLER_POLLSET(p),
-                          GRPC_CLOSURE_INIT(&p->run_poller, done_poller, p,
+                          GRPC_CLOSURE_INIT(&p->done_poller, done_poller, p,
                                             grpc_schedule_on_exec_ctx));
   } else {
     g_backup_poller_mu->Unlock();
     GRPC_TRACE_LOG(tcp, INFO) << "BACKUP_POLLER:" << p << " reschedule";
-    grpc_core::Executor::Run(&p->run_poller, absl::OkStatus(),
-                             grpc_core::ExecutorType::DEFAULT,
-                             grpc_core::ExecutorJobType::LONG);
+    p->engine->Run([p]() {
+      grpc_core::ExecCtx exec_ctx;
+      run_poller(p);
+    });
   }
 }
 
@@ -677,14 +680,15 @@ static void cover_self(grpc_tcp* tcp) {
     g_uncovered_notifications_pending = 2;
     p = static_cast<backup_poller*>(
         gpr_zalloc(sizeof(*p) + grpc_pollset_size()));
+    p->engine = grpc_event_engine::experimental::GetDefaultEventEngine();
     g_backup_poller = p;
     grpc_pollset_init(BACKUP_POLLER_POLLSET(p), &p->pollset_mu);
     g_backup_poller_mu->Unlock();
     GRPC_TRACE_LOG(tcp, INFO) << "BACKUP_POLLER:" << p << " create";
-    grpc_core::Executor::Run(
-        GRPC_CLOSURE_INIT(&p->run_poller, run_poller, p, nullptr),
-        absl::OkStatus(), grpc_core::ExecutorType::DEFAULT,
-        grpc_core::ExecutorJobType::LONG);
+    p->engine->Run([p]() {
+      grpc_core::ExecCtx exec_ctx;
+      run_poller(p);
+    });
   } else {
     old_count = g_uncovered_notifications_pending++;
     p = g_backup_poller;
@@ -734,13 +738,12 @@ static void finish_estimate(grpc_tcp* tcp) {
   tcp->bytes_read_this_round = 0;
 }
 
-static grpc_error_handle tcp_annotate_error(grpc_error_handle src_error,
-                                            grpc_tcp* tcp) {
-  return grpc_error_set_int(
-      grpc_error_set_int(src_error, grpc_core::StatusIntProperty::kFd, tcp->fd),
-      // All tcp errors are marked with UNAVAILABLE so that application may
-      // choose to retry.
-      grpc_core::StatusIntProperty::kRpcStatus, GRPC_STATUS_UNAVAILABLE);
+static grpc_error_handle tcp_annotate_error(grpc_error_handle src_error) {
+  return grpc_error_set_int(src_error,
+                            // All tcp errors are marked with UNAVAILABLE so
+                            // that application may choose to retry.
+                            grpc_core::StatusIntProperty::kRpcStatus,
+                            GRPC_STATUS_UNAVAILABLE);
 }
 
 static void tcp_handle_read(void* arg /* grpc_tcp */, grpc_error_handle error);
@@ -815,7 +818,7 @@ static void maybe_post_reclaimer(grpc_tcp* tcp)
     TCP_REF(tcp, "posted_reclaimer");
     tcp->memory_owner.PostReclaimer(
         grpc_core::ReclamationPass::kBenign,
-        [tcp](absl::optional<grpc_core::ReclamationSweep> sweep) {
+        [tcp](std::optional<grpc_core::ReclamationSweep> sweep) {
           if (sweep.has_value()) {
             perform_reclamation(tcp);
           }
@@ -891,7 +894,7 @@ static void update_rcvlowat(grpc_tcp* tcp)
 #define MAX_READ_IOVEC 64
 static bool tcp_do_read(grpc_tcp* tcp, grpc_error_handle* error)
     ABSL_EXCLUSIVE_LOCKS_REQUIRED(tcp->read_mu) {
-  GRPC_LATENT_SEE_INNER_SCOPE("tcp_do_read");
+  GRPC_LATENT_SEE_ALWAYS_ON_SCOPE("tcp_do_read");
   GRPC_TRACE_LOG(tcp, INFO) << "TCP:" << tcp << " do_read";
   struct msghdr msg;
   struct iovec iov[MAX_READ_IOVEC];
@@ -968,12 +971,10 @@ static bool tcp_do_read(grpc_tcp* tcp, grpc_error_handle* error)
       // 0 read size ==> end of stream
       grpc_slice_buffer_reset_and_unref(tcp->incoming_buffer);
       if (read_bytes == 0) {
-        *error = tcp_annotate_error(absl::InternalError("Socket closed"), tcp);
+        *error = tcp_annotate_error(absl::InternalError("Socket closed"));
       } else {
-        *error =
-            tcp_annotate_error(absl::InternalError(absl::StrCat(
-                                   "recvmsg:", grpc_core::StrError(errno))),
-                               tcp);
+        *error = tcp_annotate_error(absl::InternalError(
+            absl::StrCat("recvmsg:", grpc_core::StrError(errno))));
       }
       return true;
     }
@@ -1121,8 +1122,7 @@ static void tcp_handle_read(void* arg /* grpc_tcp */, grpc_error_handle error) {
     tcp_trace_read(tcp, tcp_read_error);
   } else {
     if (!tcp->memory_owner.is_valid() && error.ok()) {
-      tcp_read_error =
-          tcp_annotate_error(absl::InternalError("Socket closed"), tcp);
+      tcp_read_error = tcp_annotate_error(absl::InternalError("Socket closed"));
     } else {
       tcp_read_error = error;
     }
@@ -1184,7 +1184,7 @@ static void tcp_read(grpc_endpoint* ep, grpc_slice_buffer* incoming_buffer,
 // of bytes sent.
 ssize_t tcp_send(int fd, const struct msghdr* msg, int* saved_errno,
                  int additional_flags = 0) {
-  GRPC_LATENT_SEE_INNER_SCOPE("tcp_send");
+  GRPC_LATENT_SEE_ALWAYS_ON_SCOPE("tcp_send");
   ssize_t sent_length;
   do {
     // TODO(klempner): Cork if this is a partial write
@@ -1375,7 +1375,7 @@ struct cmsghdr* process_timestamp(grpc_tcp* tcp, msghdr* msg,
 /// messages from the queue.
 ///
 static bool process_errors(grpc_tcp* tcp) {
-  GRPC_LATENT_SEE_INNER_SCOPE("process_errors");
+  GRPC_LATENT_SEE_ALWAYS_ON_SCOPE("process_errors");
   bool processed_err = false;
   struct iovec iov;
   iov.iov_base = nullptr;
@@ -1616,7 +1616,7 @@ static bool do_tcp_flush_zerocopy(grpc_tcp* tcp, TcpZerocopySendRecord* record,
         record->UnwindIfThrottled(unwind_slice_idx, unwind_byte_idx);
         return false;
       } else {
-        *error = tcp_annotate_error(GRPC_OS_ERROR(saved_errno, "sendmsg"), tcp);
+        *error = tcp_annotate_error(GRPC_OS_ERROR(saved_errno, "sendmsg"));
         tcp_shutdown_buffer_list(tcp);
         return true;
       }
@@ -1726,7 +1726,7 @@ static bool tcp_flush(grpc_tcp* tcp, grpc_error_handle* error) {
         }
         return false;
       } else {
-        *error = tcp_annotate_error(GRPC_OS_ERROR(saved_errno, "sendmsg"), tcp);
+        *error = tcp_annotate_error(GRPC_OS_ERROR(saved_errno, "sendmsg"));
         grpc_slice_buffer_reset_and_unref(tcp->outgoing_buffer);
         tcp_shutdown_buffer_list(tcp);
         return true;
@@ -1795,8 +1795,9 @@ static void tcp_handle_write(void* arg /* grpc_tcp */,
   }
 }
 
-static void tcp_write(grpc_endpoint* ep, grpc_slice_buffer* buf,
-                      grpc_closure* cb, void* arg, int /*max_frame_size*/) {
+static void tcp_write(
+    grpc_endpoint* ep, grpc_slice_buffer* buf, grpc_closure* cb,
+    grpc_event_engine::experimental::EventEngine::Endpoint::WriteArgs args) {
   grpc_tcp* tcp = reinterpret_cast<grpc_tcp*>(ep);
   grpc_error_handle error;
   TcpZerocopySendRecord* zerocopy_send_record = nullptr;
@@ -1821,11 +1822,10 @@ static void tcp_write(grpc_endpoint* ep, grpc_slice_buffer* buf,
   DCHECK_EQ(tcp->current_zerocopy_send, nullptr);
 
   if (buf->length == 0) {
-    grpc_core::Closure::Run(
-        DEBUG_LOCATION, cb,
-        grpc_fd_is_shutdown(tcp->em_fd)
-            ? tcp_annotate_error(GRPC_ERROR_CREATE("EOF"), tcp)
-            : absl::OkStatus());
+    grpc_core::Closure::Run(DEBUG_LOCATION, cb,
+                            grpc_fd_is_shutdown(tcp->em_fd)
+                                ? tcp_annotate_error(GRPC_ERROR_CREATE("EOF"))
+                                : absl::OkStatus());
     tcp_shutdown_buffer_list(tcp);
     return;
   }
@@ -1836,8 +1836,9 @@ static void tcp_write(grpc_endpoint* ep, grpc_slice_buffer* buf,
     tcp->outgoing_buffer = buf;
     tcp->outgoing_byte_idx = 0;
   }
-  tcp->outgoing_buffer_arg = arg;
-  if (arg) {
+  tcp->outgoing_buffer_arg =
+      args.TakeDeprecatedAndDiscouragedGoogleSpecificPointer();
+  if (tcp->outgoing_buffer_arg) {
     CHECK(grpc_event_engine_can_track_errors());
   }
 
@@ -1913,9 +1914,44 @@ static const grpc_endpoint_vtable vtable = {tcp_read,
                                             tcp_get_fd,
                                             tcp_can_track_err};
 
+grpc_endpoint* grpc_tcp_create(
+    grpc_fd* fd, const grpc_event_engine::experimental::EndpointConfig& config,
+    absl::string_view peer_string) {
+  if (grpc_core::IsEventEngineForAllOtherEndpointsEnabled() &&
+      !grpc_event_engine::experimental::
+          EventEngineExperimentDisabledForPython()) {
+    // Create an EventEngine endpoint when creating the transport.
+    auto* engine =
+        reinterpret_cast<grpc_event_engine::experimental::EventEngine*>(
+            config.GetVoidPointer(GRPC_INTERNAL_ARG_EVENT_ENGINE));
+    if (engine == nullptr) {
+      grpc_core::Crash("EventEngine is not set");
+    }
+    auto* engine_supports_fd = grpc_event_engine::experimental::QueryExtension<
+        grpc_event_engine::experimental::EventEngineSupportsFdExtension>(
+        engine);
+    if (engine_supports_fd == nullptr) {
+      grpc_core::Crash("EventEngine does not support fds");
+    }
+    int wrapped_fd;
+    grpc_fd_orphan(fd, nullptr, &wrapped_fd, "Hand fd over to EventEngine");
+    return grpc_event_engine_endpoint_create(
+        engine_supports_fd->CreateEndpointFromFd(wrapped_fd, config));
+  }
+  return grpc_tcp_create(fd, TcpOptionsFromEndpointConfig(config), peer_string);
+}
+
 grpc_endpoint* grpc_tcp_create(grpc_fd* em_fd,
                                const grpc_core::PosixTcpOptions& options,
                                absl::string_view peer_string) {
+  CHECK(!grpc_event_engine::experimental::UsePollsetAlternative())
+      << "This function must not be called when the pollset_alternative "
+         "experiment is enabled. This is a bug.";
+  CHECK(
+      !grpc_core::IsEventEngineForAllOtherEndpointsEnabled() ||
+      grpc_event_engine::experimental::EventEngineExperimentDisabledForPython())
+      << "The event_engine_for_all_other_endpoints experiment should prevent "
+         "this method from being called. This is a bug.";
   grpc_tcp* tcp = new grpc_tcp(options);
   tcp->base.vtable = &vtable;
   tcp->peer_string = std::string(peer_string);

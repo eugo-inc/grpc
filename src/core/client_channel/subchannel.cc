@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <memory>
 #include <new>
+#include <optional>
 #include <utility>
 
 #include "absl/log/check.h"
@@ -34,17 +35,17 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
+#include "src/core/call/interception_chain.h"
 #include "src/core/channelz/channel_trace.h"
 #include "src/core/channelz/channelz.h"
 #include "src/core/client_channel/client_channel_internal.h"
 #include "src/core/client_channel/subchannel_pool_interface.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/handshaker/proxy_mapper_registry.h"
 #include "src/core/lib/address_utils/sockaddr_utils.h"
 #include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/channel/channel_stack.h"
 #include "src/core/lib/channel/channel_stack_builder_impl.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/debug/trace.h"
 #include "src/core/lib/experiments/experiments.h"
 #include "src/core/lib/iomgr/exec_ctx.h"
@@ -57,7 +58,6 @@
 #include "src/core/lib/surface/init_internally.h"
 #include "src/core/lib/transport/connectivity_state.h"
 #include "src/core/lib/transport/error_utils.h"
-#include "src/core/lib/transport/interception_chain.h"
 #include "src/core/lib/transport/transport.h"
 #include "src/core/telemetry/stats.h"
 #include "src/core/telemetry/stats_data.h"
@@ -117,7 +117,7 @@ class LegacyConnectedSubchannel : public ConnectedSubchannel {
     channel_stack_.reset(DEBUG_LOCATION, "ConnectedSubchannel");
   }
 
-  channelz::SubchannelNode* channelz_node() const {
+  channelz::SubchannelNode* channelz_node() const override {
     return channelz_node_.get();
   }
 
@@ -220,6 +220,8 @@ class NewConnectedSubchannel : public ConnectedSubchannel {
     Crash("legacy ping method called in call v3 impl");
   }
 
+  channelz::SubchannelNode* channelz_node() const override { return nullptr; }
+
  private:
   RefCountedPtr<UnstartedCallDestination> call_destination_;
   RefCountedPtr<TransportCallDestination> transport_;
@@ -244,13 +246,12 @@ SubchannelCall::SubchannelCall(Args args, grpc_error_handle* error)
       deadline_(args.deadline) {
   grpc_call_stack* callstk = SUBCHANNEL_CALL_TO_CALL_STACK(this);
   const grpc_call_element_args call_args = {
-      callstk,              // call_stack
-      nullptr,              // server_transport_data
-      args.path.c_slice(),  // path
-      args.start_time,      // start_time
-      args.deadline,        // deadline
-      args.arena,           // arena
-      args.call_combiner    // call_combiner
+      callstk,            // call_stack
+      nullptr,            // server_transport_data
+      args.start_time,    // start_time
+      args.deadline,      // deadline
+      args.arena,         // arena
+      args.call_combiner  // call_combiner
   };
   *error = grpc_call_stack_init(connected_subchannel_->channel_stack(), 1,
                                 SubchannelCall::Destroy, this, &call_args);
@@ -411,28 +412,40 @@ class Subchannel::ConnectedSubchannelStateWatcher final
       // we will see TRANSIENT_FAILURE followed by SHUTDOWN, but if not, we
       // will see only SHUTDOWN.  Either way, we react to the first one we
       // see, ignoring anything that happens after that.
-      if (c->connected_subchannel_ == nullptr) return;
       if (new_state == GRPC_CHANNEL_TRANSIENT_FAILURE ||
           new_state == GRPC_CHANNEL_SHUTDOWN) {
+        RefCountedPtr<ConnectedSubchannel> connected_subchannel =
+            std::move(c->connected_subchannel_);
+        if (connected_subchannel == nullptr) return;
         GRPC_TRACE_LOG(subchannel, INFO)
             << "subchannel " << c << " " << c->key_.ToString()
-            << ": Connected subchannel " << c->connected_subchannel_.get()
+            << ": Connected subchannel " << connected_subchannel.get()
             << " reports " << ConnectivityStateName(new_state) << ": "
             << status;
-        c->connected_subchannel_.reset();
         if (c->channelz_node() != nullptr) {
-          c->channelz_node()->SetChildSocket(nullptr);
+          if (connected_subchannel->channelz_node() != nullptr) {
+            connected_subchannel->channelz_node()->RemoveParent(
+                c->channelz_node());
+          }
         }
-        // Even though we're reporting IDLE instead of TRANSIENT_FAILURE here,
-        // pass along the status from the transport, since it may have
-        // keepalive info attached to it that the channel needs.
-        // TODO(roth): Consider whether there's a cleaner way to do this.
-        c->SetConnectivityStateLocked(GRPC_CHANNEL_IDLE, status);
+        // If the subchannel was created from an endpoint, then we report
+        // TRANSIENT_FAILURE here instead of IDLE. The subchannel will never
+        // leave TRANSIENT_FAILURE state, because there is no way for us to
+        // establish a new connection.
+        //
+        // Otherwise, we report IDLE here. Note that even though we're not
+        // reporting TRANSIENT_FAILURE, we pass along the status from the
+        // transport, since it may have keepalive info attached to it that the
+        // channel needs.
+        // TODO(roth): Consider whether there's a cleaner way to propagate the
+        // keepalive info.
+        c->SetConnectivityStateLocked(c->created_from_endpoint_
+                                          ? GRPC_CHANNEL_TRANSIENT_FAILURE
+                                          : GRPC_CHANNEL_IDLE,
+                                      status);
         c->backoff_.Reset();
       }
     }
-    // Drain any connectivity state notifications after releasing the mutex.
-    c->work_serializer_.DrainQueue();
   }
 
   WeakRefCountedPtr<Subchannel> subchannel_;
@@ -444,7 +457,7 @@ class Subchannel::ConnectedSubchannelStateWatcher final
 
 void Subchannel::ConnectivityStateWatcherList::AddWatcherLocked(
     RefCountedPtr<ConnectivityStateWatcherInterface> watcher) {
-  watchers_.insert(std::make_pair(watcher.get(), std::move(watcher)));
+  watchers_.insert(std::move(watcher));
 }
 
 void Subchannel::ConnectivityStateWatcherList::RemoveWatcherLocked(
@@ -454,14 +467,10 @@ void Subchannel::ConnectivityStateWatcherList::RemoveWatcherLocked(
 
 void Subchannel::ConnectivityStateWatcherList::NotifyLocked(
     grpc_connectivity_state state, const absl::Status& status) {
-  for (const auto& p : watchers_) {
-    subchannel_->work_serializer_.Schedule(
-        [watcher = p.second->Ref(), state, status]() mutable {
-          auto* watcher_ptr = watcher.get();
-          watcher_ptr->OnConnectivityStateChange(std::move(watcher), state,
-                                                 status);
-        },
-        DEBUG_LOCATION);
+  for (const auto& watcher : watchers_) {
+    subchannel_->work_serializer_.Run([watcher, state, status]() {
+      watcher->OnConnectivityStateChange(state, status);
+    });
   }
 }
 
@@ -473,7 +482,7 @@ namespace {
 
 BackOff::Options ParseArgsForBackoffValues(const ChannelArgs& args,
                                            Duration* min_connect_timeout) {
-  const absl::optional<Duration> fixed_reconnect_backoff =
+  const std::optional<Duration> fixed_reconnect_backoff =
       args.GetDurationFromIntMillis("grpc.testing.fixed_reconnect_backoff_ms");
   if (fixed_reconnect_backoff.has_value()) {
     const Duration backoff =
@@ -516,6 +525,7 @@ Subchannel::Subchannel(SubchannelKey key,
                                      ? "Subchannel"
                                      : nullptr),
       key_(std::move(key)),
+      created_from_endpoint_(args.Contains(GRPC_ARG_SUBCHANNEL_ENDPOINT)),
       args_(args),
       pollset_set_(grpc_pollset_set_create()),
       connector_(std::move(connector)),
@@ -553,17 +563,15 @@ Subchannel::Subchannel(SubchannelKey key,
         grpc_sockaddr_to_uri(&key_.address())
             .value_or("<unknown address type>"),
         channel_tracer_max_memory);
-    channelz_node_->AddTraceEvent(
-        channelz::ChannelTrace::Severity::Info,
-        grpc_slice_from_static_string("subchannel created"));
+    GRPC_CHANNELZ_LOG(channelz_node_) << "subchannel created";
+    channelz_node_->SetChannelArgs(args_);
+    args_ = args_.SetObject<channelz::BaseNode>(channelz_node_);
   }
 }
 
 Subchannel::~Subchannel() {
   if (channelz_node_ != nullptr) {
-    channelz_node_->AddTraceEvent(
-        channelz::ChannelTrace::Severity::Info,
-        grpc_slice_from_static_string("Subchannel destroyed"));
+    GRPC_CHANNELZ_LOG(channelz_node_) << "Subchannel destroyed";
     channelz_node_->UpdateConnectivityState(GRPC_CHANNEL_SHUTDOWN);
   }
   connector_.reset();
@@ -583,6 +591,15 @@ RefCountedPtr<Subchannel> Subchannel::Create(
     return c;
   }
   c = MakeRefCounted<Subchannel>(std::move(key), std::move(connector), args);
+  if (c->created_from_endpoint_) {
+    // We don't interact with the subchannel pool in this case.
+    // Instead, we unconditionally return the newly created subchannel.
+    // Before returning, we explicitly trigger a connection attempt
+    // by calling RequestConnection(), which sets the subchannel’s
+    // connectivity state to CONNECTING.
+    c->RequestConnection();
+    return c;
+  }
   // Try to register the subchannel before setting the subchannel pool.
   // Otherwise, in case of a registration race, unreffing c in
   // RegisterSubchannel() will cause c to be tried to be unregistered, while
@@ -611,50 +628,34 @@ channelz::SubchannelNode* Subchannel::channelz_node() {
 
 void Subchannel::WatchConnectivityState(
     RefCountedPtr<ConnectivityStateWatcherInterface> watcher) {
-  {
-    MutexLock lock(&mu_);
-    grpc_pollset_set* interested_parties = watcher->interested_parties();
-    if (interested_parties != nullptr) {
-      grpc_pollset_set_add_pollset_set(pollset_set_, interested_parties);
-    }
-    work_serializer_.Schedule(
-        [watcher = watcher->Ref(), state = state_, status = status_]() mutable {
-          auto* watcher_ptr = watcher.get();
-          watcher_ptr->OnConnectivityStateChange(std::move(watcher), state,
-                                                 status);
-        },
-        DEBUG_LOCATION);
-    watcher_list_.AddWatcherLocked(std::move(watcher));
+  MutexLock lock(&mu_);
+  grpc_pollset_set* interested_parties = watcher->interested_parties();
+  if (interested_parties != nullptr) {
+    grpc_pollset_set_add_pollset_set(pollset_set_, interested_parties);
   }
-  // Drain any connectivity state notifications after releasing the mutex.
-  work_serializer_.DrainQueue();
+  work_serializer_.Run(
+      [watcher, state = state_, status = status_]() {
+        watcher->OnConnectivityStateChange(state, status);
+      },
+      DEBUG_LOCATION);
+  watcher_list_.AddWatcherLocked(std::move(watcher));
 }
 
 void Subchannel::CancelConnectivityStateWatch(
     ConnectivityStateWatcherInterface* watcher) {
-  {
-    MutexLock lock(&mu_);
-    grpc_pollset_set* interested_parties = watcher->interested_parties();
-    if (interested_parties != nullptr) {
-      grpc_pollset_set_del_pollset_set(pollset_set_, interested_parties);
-    }
-    watcher_list_.RemoveWatcherLocked(watcher);
+  MutexLock lock(&mu_);
+  grpc_pollset_set* interested_parties = watcher->interested_parties();
+  if (interested_parties != nullptr) {
+    grpc_pollset_set_del_pollset_set(pollset_set_, interested_parties);
   }
-  // Drain any connectivity state notifications after releasing the mutex.
-  // (Shouldn't actually be necessary in this case, but better safe than
-  // sorry.)
-  work_serializer_.DrainQueue();
+  watcher_list_.RemoveWatcherLocked(watcher);
 }
 
 void Subchannel::RequestConnection() {
-  {
-    MutexLock lock(&mu_);
-    if (state_ == GRPC_CHANNEL_IDLE) {
-      StartConnectingLocked();
-    }
+  MutexLock lock(&mu_);
+  if (state_ == GRPC_CHANNEL_IDLE) {
+    StartConnectingLocked();
   }
-  // Drain any connectivity state notifications after releasing the mutex.
-  work_serializer_.DrainQueue();
 }
 
 void Subchannel::ResetBackoff() {
@@ -662,18 +663,14 @@ void Subchannel::ResetBackoff() {
   // does not eliminate the last ref and destroy the Subchannel before the
   // method returns.
   auto self = WeakRef(DEBUG_LOCATION, "ResetBackoff");
-  {
-    MutexLock lock(&mu_);
-    backoff_.Reset();
-    if (state_ == GRPC_CHANNEL_TRANSIENT_FAILURE &&
-        event_engine_->Cancel(retry_timer_handle_)) {
-      OnRetryTimerLocked();
-    } else if (state_ == GRPC_CHANNEL_CONNECTING) {
-      next_attempt_time_ = Timestamp::Now();
-    }
+  MutexLock lock(&mu_);
+  backoff_.Reset();
+  if (state_ == GRPC_CHANNEL_TRANSIENT_FAILURE &&
+      event_engine_->Cancel(retry_timer_handle_)) {
+    OnRetryTimerLocked();
+  } else if (state_ == GRPC_CHANNEL_CONNECTING) {
+    next_attempt_time_ = Timestamp::Now();
   }
-  // Drain any connectivity state notifications after releasing the mutex.
-  work_serializer_.DrainQueue();
 }
 
 void Subchannel::Orphaned() {
@@ -683,15 +680,11 @@ void Subchannel::Orphaned() {
     subchannel_pool_->UnregisterSubchannel(key_, this);
     subchannel_pool_.reset();
   }
-  {
-    MutexLock lock(&mu_);
-    CHECK(!shutdown_);
-    shutdown_ = true;
-    connector_.reset();
-    connected_subchannel_.reset();
-  }
-  // Drain any connectivity state notifications after releasing the mutex.
-  work_serializer_.DrainQueue();
+  MutexLock lock(&mu_);
+  CHECK(!shutdown_);
+  shutdown_ = true;
+  connector_.reset();
+  connected_subchannel_.reset();
 }
 
 void Subchannel::GetOrAddDataProducer(
@@ -731,24 +724,23 @@ void Subchannel::SetConnectivityStateLocked(grpc_connectivity_state state,
   }
   if (channelz_node_ != nullptr) {
     channelz_node_->UpdateConnectivityState(state);
-    channelz_node_->AddTraceEvent(
-        channelz::ChannelTrace::Severity::Info,
-        grpc_slice_from_cpp_string(absl::StrCat(
-            "Subchannel connectivity state changed to ",
-            ConnectivityStateName(state),
-            status.ok() ? "" : absl::StrCat(": ", status_.ToString()))));
+    if (status.ok()) {
+      GRPC_CHANNELZ_LOG(channelz_node_)
+          << "Subchannel connectivity state changed to "
+          << ConnectivityStateName(state);
+    } else {
+      GRPC_CHANNELZ_LOG(channelz_node_)
+          << "Subchannel connectivity state changed to "
+          << ConnectivityStateName(state) << ": " << status;
+    }
   }
   // Notify watchers.
   watcher_list_.NotifyLocked(state, status_);
 }
 
 void Subchannel::OnRetryTimer() {
-  {
-    MutexLock lock(&mu_);
-    OnRetryTimerLocked();
-  }
-  // Drain any connectivity state notifications after releasing the mutex.
-  work_serializer_.DrainQueue();
+  MutexLock lock(&mu_);
+  OnRetryTimerLocked();
 }
 
 void Subchannel::OnRetryTimerLocked() {
@@ -782,8 +774,6 @@ void Subchannel::OnConnectingFinished(void* arg, grpc_error_handle error) {
     MutexLock lock(&c->mu_);
     c->OnConnectingFinishedLocked(error);
   }
-  // Drain any connectivity state notifications after releasing the mutex.
-  c->work_serializer_.DrainQueue();
   c.reset(DEBUG_LOCATION, "Connect");
 }
 
@@ -802,15 +792,19 @@ void Subchannel::OnConnectingFinishedLocked(grpc_error_handle error) {
         next_attempt_time_ - Timestamp::Now();
     GRPC_TRACE_LOG(subchannel, INFO)
         << "subchannel " << this << " " << key_.ToString()
-        << ": connect failed (" << StatusToString(error)
-        << "), backing off for " << time_until_next_attempt.millis() << " ms";
+        << ": connect failed (" << StatusToString(error) << ")"
+        << (created_from_endpoint_
+                ? ", no retry will be attempted (created from endpoint); "
+                  "remaining in TRANSIENT_FAILURE"
+                : ", backing off for " +
+                      std::to_string(time_until_next_attempt.millis()) + " ms");
     SetConnectivityStateLocked(GRPC_CHANNEL_TRANSIENT_FAILURE,
                                grpc_error_to_absl_status(error));
+    if (created_from_endpoint_) return;
     retry_timer_handle_ = event_engine_->RunAfter(
         time_until_next_attempt,
         [self = WeakRef(DEBUG_LOCATION, "RetryTimer")]() mutable {
           {
-            ApplicationCallbackExecCtx callback_exec_ctx;
             ExecCtx exec_ctx;
             self->OnRetryTimer();
             // Subchannel deletion might require an active ExecCtx. So if
@@ -826,7 +820,7 @@ void Subchannel::OnConnectingFinishedLocked(grpc_error_handle error) {
 }
 
 bool Subchannel::PublishTransportLocked() {
-  auto socket_node = std::move(connecting_result_.socket_node);
+  auto socket_node = connecting_result_.transport->GetSocketNode();
   if (connecting_result_.transport->filter_stack_transport() != nullptr) {
     // Construct channel stack.
     // Builder takes ownership of transport.
@@ -892,7 +886,9 @@ bool Subchannel::PublishTransportLocked() {
       << "subchannel " << this << " " << key_.ToString()
       << ": new connected subchannel at " << connected_subchannel_.get();
   if (channelz_node_ != nullptr) {
-    channelz_node_->SetChildSocket(std::move(socket_node));
+    if (socket_node != nullptr) {
+      socket_node->AddParent(channelz_node_.get());
+    }
   }
   // Start watching connected subchannel.
   connected_subchannel_->StartWatch(

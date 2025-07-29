@@ -45,16 +45,17 @@ grpc_cc_library(
         "absl/log:log",
         "absl/status:statusor",
         "absl/strings",
-        "absl/types:optional",
-        "absl/types:variant",
         "google_cloud_cpp:opentelemetry",
         "otel/api",
         "otel/sdk/src/metrics",
         "otel/sdk:headers",
-        "@com_google_protobuf//upb:base",
-        "@com_google_protobuf//upb:mem",
+        "@com_google_protobuf//upb/base",
+        "@com_google_protobuf//upb/mem",
     ],
-    language = "c++",
+    tags = [
+        # TODO(b/332369798): Remove after fixing bug
+        "grpc:otel-namespace-calamity",
+    ],
     visibility = ["//:__subpackages__"],
     deps = [
         "//:call_tracer",

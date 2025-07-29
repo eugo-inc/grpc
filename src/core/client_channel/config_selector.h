@@ -27,12 +27,13 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "src/core/call/interception_chain.h"
+#include "src/core/call/metadata_batch.h"
 #include "src/core/client_channel/client_channel_internal.h"
+#include "src/core/filter/blackboard.h"
 #include "src/core/lib/channel/channel_fwd.h"
 #include "src/core/lib/resource_quota/arena.h"
 #include "src/core/lib/slice/slice.h"
-#include "src/core/lib/transport/interception_chain.h"
-#include "src/core/lib/transport/metadata_batch.h"
 #include "src/core/service_config/service_config.h"
 #include "src/core/util/ref_counted.h"
 #include "src/core/util/ref_counted_ptr.h"
@@ -61,9 +62,14 @@ class ConfigSelector : public RefCounted<ConfigSelector> {
 
   // The channel will call this when the resolver returns a new ConfigSelector
   // to determine what set of dynamic filters will be configured.
-  virtual void AddFilters(InterceptionChainBuilder& /*builder*/) {}
+  virtual void AddFilters(InterceptionChainBuilder& /*builder*/,
+                          const Blackboard* /*old_blackboard*/,
+                          Blackboard* /*new_blackboard*/) {}
   // TODO(roth): Remove this once the legacy filter stack goes away.
-  virtual std::vector<const grpc_channel_filter*> GetFilters() { return {}; }
+  virtual std::vector<const grpc_channel_filter*> GetFilters(
+      const Blackboard* /*old_blackboard*/, Blackboard* /*new_blackboard*/) {
+    return {};
+  }
 
   // Gets the configuration for the call and stores it in service config
   // call data.

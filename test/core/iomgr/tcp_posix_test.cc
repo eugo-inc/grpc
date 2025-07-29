@@ -16,11 +16,7 @@
 //
 //
 
-#include "absl/time/time.h"
-#include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/iomgr/port.h"
-#include "src/core/util/notification.h"
-#include "src/core/util/time.h"
 
 // This test won't work except with posix sockets enabled
 #ifdef GRPC_POSIX_SOCKET_TCP
@@ -30,7 +26,6 @@
 #include <grpc/grpc.h>
 #include <grpc/support/alloc.h>
 #include <grpc/support/time.h>
-#include <gtest/gtest.h>
 #include <limits.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -39,10 +34,14 @@
 
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+#include "absl/time/time.h"
+#include "gtest/gtest.h"
+#include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/event_engine/channel_args_endpoint_config.h"
 #include "src/core/lib/event_engine/default_event_engine.h"
 #include "src/core/lib/event_engine/posix.h"
 #include "src/core/lib/event_engine/shim.h"
+#include "src/core/lib/experiments/experiments.h"
 #include "src/core/lib/iomgr/buffer_list.h"
 #include "src/core/lib/iomgr/ev_posix.h"
 #include "src/core/lib/iomgr/event_engine_shims/endpoint.h"
@@ -51,6 +50,8 @@
 #include "src/core/lib/iomgr/tcp_posix.h"
 #include "src/core/lib/slice/slice_internal.h"
 #include "src/core/util/crash.h"
+#include "src/core/util/notification.h"
+#include "src/core/util/time.h"
 #include "src/core/util/useful.h"
 #include "test/core/iomgr/endpoint_tests.h"
 #include "test/core/test_util/test_config.h"
@@ -207,9 +208,8 @@ static void read_test(size_t num_bytes, size_t slice_size,
   grpc_channel_args args = {GPR_ARRAY_SIZE(a), a};
   ep = grpc_tcp_create(
       grpc_fd_create(sv[1], "read_test", false),
-      TcpOptionsFromEndpointConfig(
-          grpc_event_engine::experimental::ChannelArgsEndpointConfig(
-              grpc_core::ChannelArgs::FromC(&args))),
+      grpc_event_engine::experimental::ChannelArgsEndpointConfig(
+          grpc_core::ChannelArgs::FromC(&args)),
       "test");
   grpc_endpoint_add_to_pollset(ep, g_pollset);
 
@@ -271,9 +271,8 @@ static void large_read_test(size_t slice_size, int min_progress_size) {
   grpc_channel_args args = {GPR_ARRAY_SIZE(a), a};
   ep = grpc_tcp_create(
       grpc_fd_create(sv[1], "large_read_test", false),
-      TcpOptionsFromEndpointConfig(
-          grpc_event_engine::experimental::ChannelArgsEndpointConfig(
-              grpc_core::ChannelArgs::FromC(&args))),
+      grpc_event_engine::experimental::ChannelArgsEndpointConfig(
+          grpc_core::ChannelArgs::FromC(&args)),
       "test");
   grpc_endpoint_add_to_pollset(ep, g_pollset);
 
@@ -424,9 +423,8 @@ static void write_test(size_t num_bytes, size_t slice_size) {
   grpc_channel_args args = {GPR_ARRAY_SIZE(a), a};
   ep = grpc_tcp_create(
       grpc_fd_create(sv[1], "write_test", false),
-      TcpOptionsFromEndpointConfig(
-          grpc_event_engine::experimental::ChannelArgsEndpointConfig(
-              grpc_core::ChannelArgs::FromC(&args))),
+      grpc_event_engine::experimental::ChannelArgsEndpointConfig(
+          grpc_core::ChannelArgs::FromC(&args)),
       "test");
   grpc_endpoint_add_to_pollset(ep, g_pollset);
 
@@ -440,8 +438,10 @@ static void write_test(size_t num_bytes, size_t slice_size) {
   GRPC_CLOSURE_INIT(&write_done_closure, write_done, &state,
                     grpc_schedule_on_exec_ctx);
 
-  grpc_endpoint_write(ep, &outgoing, &write_done_closure, nullptr,
-                      /*max_frame_size=*/INT_MAX);
+  grpc_event_engine::experimental::EventEngine::Endpoint::WriteArgs write_args;
+  write_args.set_max_frame_size(INT_MAX);
+  grpc_endpoint_write(ep, &outgoing, &write_done_closure,
+                      std::move(write_args));
   drain_socket_blocking(sv[0], num_bytes, num_bytes);
   exec_ctx.Flush();
   gpr_mu_lock(g_mu);
@@ -505,7 +505,8 @@ static void release_fd_test(size_t num_bytes, size_t slice_size) {
   a[1].type = GRPC_ARG_POINTER;
   a[1].value.pointer.p = grpc_resource_quota_create("test");
   a[1].value.pointer.vtable = grpc_resource_quota_arg_vtable();
-  auto memory_quota = std::make_unique<grpc_core::MemoryQuota>("bar");
+  auto memory_quota = std::make_unique<grpc_core::MemoryQuota>(
+      grpc_core::MakeRefCounted<grpc_core::channelz::ResourceQuotaNode>("bar"));
   grpc_channel_args args = {GPR_ARRAY_SIZE(a), a};
   if (grpc_event_engine::experimental::UseEventEngineListener()) {
     // Create an event engine wrapped endpoint to test release_fd operations.
@@ -523,9 +524,8 @@ static void release_fd_test(size_t num_bytes, size_t slice_size) {
   } else {
     ep = grpc_tcp_create(
         grpc_fd_create(sv[1], "read_test", false),
-        TcpOptionsFromEndpointConfig(
-            grpc_event_engine::experimental::ChannelArgsEndpointConfig(
-                grpc_core::ChannelArgs::FromC(&args))),
+        grpc_event_engine::experimental::ChannelArgsEndpointConfig(
+            grpc_core::ChannelArgs::FromC(&args)),
         "test");
     CHECK(grpc_tcp_fd(ep) == sv[1]);
     CHECK_GE(sv[1], 0);
@@ -617,15 +617,13 @@ static grpc_endpoint_test_fixture create_fixture_tcp_socketpair(
   grpc_channel_args args = {GPR_ARRAY_SIZE(a), a};
   f.client_ep = grpc_tcp_create(
       grpc_fd_create(sv[0], "fixture:client", false),
-      TcpOptionsFromEndpointConfig(
-          grpc_event_engine::experimental::ChannelArgsEndpointConfig(
-              grpc_core::ChannelArgs::FromC(&args))),
+      grpc_event_engine::experimental::ChannelArgsEndpointConfig(
+          grpc_core::ChannelArgs::FromC(&args)),
       "test");
   f.server_ep = grpc_tcp_create(
       grpc_fd_create(sv[1], "fixture:server", false),
-      TcpOptionsFromEndpointConfig(
-          grpc_event_engine::experimental::ChannelArgsEndpointConfig(
-              grpc_core::ChannelArgs::FromC(&args))),
+      grpc_event_engine::experimental::ChannelArgsEndpointConfig(
+          grpc_core::ChannelArgs::FromC(&args)),
       "test");
   grpc_endpoint_add_to_pollset(f.client_ep, g_pollset);
   grpc_endpoint_add_to_pollset(f.server_ep, g_pollset);
@@ -648,6 +646,15 @@ int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   grpc::testing::TestEnvironment env(&argc, argv);
   grpc_init();
+  if (grpc_core::IsEventEngineForAllOtherEndpointsEnabled() &&
+      !grpc_event_engine::experimental::
+          EventEngineExperimentDisabledForPython()) {
+    LOG(INFO) << "This test is skipped since the "
+                 "event_engine_for_all_other_endpoints experiment is enabled, "
+                 "which replaces iomgr grpc_fds with minimal implementations. "
+                 "The test uses grpc_fds directly, which will not work.";
+    return 0;
+  }
   {
     grpc_core::ExecCtx exec_ctx;
     g_pollset = static_cast<grpc_pollset*>(gpr_zalloc(grpc_pollset_size()));

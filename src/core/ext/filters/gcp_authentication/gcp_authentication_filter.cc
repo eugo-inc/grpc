@@ -22,13 +22,13 @@
 
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
+#include "src/core/call/security_context.h"
+#include "src/core/config/core_configuration.h"
+#include "src/core/credentials/call/gcp_service_account_identity/gcp_service_account_identity_credentials.h"
 #include "src/core/ext/filters/gcp_authentication/gcp_authentication_service_config_parser.h"
 #include "src/core/lib/channel/channel_stack.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/promise/context.h"
 #include "src/core/lib/resource_quota/arena.h"
-#include "src/core/lib/security/context/security_context.h"
-#include "src/core/lib/security/credentials/gcp_service_account_identity/gcp_service_account_identity_credentials.h"
 #include "src/core/lib/transport/transport.h"
 #include "src/core/resolver/xds/xds_resolver_attributes.h"
 #include "src/core/service_config/service_config.h"
@@ -39,13 +39,6 @@ namespace grpc_core {
 //
 // GcpAuthenticationFilter::Call
 //
-
-const NoInterceptor GcpAuthenticationFilter::Call::OnClientToServerMessage;
-const NoInterceptor GcpAuthenticationFilter::Call::OnClientToServerHalfClose;
-const NoInterceptor GcpAuthenticationFilter::Call::OnServerInitialMetadata;
-const NoInterceptor GcpAuthenticationFilter::Call::OnServerToClientMessage;
-const NoInterceptor GcpAuthenticationFilter::Call::OnServerTrailingMetadata;
-const NoInterceptor GcpAuthenticationFilter::Call::OnFinalize;
 
 absl::Status GcpAuthenticationFilter::Call::OnClientInitialMetadata(
     ClientMetadata& /*md*/, GcpAuthenticationFilter* filter) {
@@ -174,14 +167,14 @@ GcpAuthenticationFilter::Create(const ChannelArgs& args,
     return absl::InvalidArgumentError(
         "gcp_auth: xds config not found in channel args");
   }
-  // Get existing cache or create new one.
-  auto cache = filter_args.GetOrCreateState<CallCredentialsCache>(
-      filter_config->filter_instance_name, [&]() {
-        return MakeRefCounted<CallCredentialsCache>(filter_config->cache_size);
-      });
-  // Make sure size is updated, in case we're reusing a pre-existing
-  // cache but it has the wrong size.
-  cache->SetMaxSize(filter_config->cache_size);
+  // Get cache from blackboard.  This must have been populated
+  // previously by the XdsConfigSelector.
+  auto cache = filter_args.GetState<CallCredentialsCache>(
+      filter_config->filter_instance_name);
+  if (cache == nullptr) {
+    return absl::InvalidArgumentError(
+        "gcp_auth: cache object not found in filter state");
+  }
   // Instantiate filter.
   return std::unique_ptr<GcpAuthenticationFilter>(
       new GcpAuthenticationFilter(std::move(service_config), filter_config,

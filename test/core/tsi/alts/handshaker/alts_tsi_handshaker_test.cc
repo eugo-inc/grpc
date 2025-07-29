@@ -20,10 +20,10 @@
 
 #include <grpc/grpc.h>
 #include <grpc/support/sync.h>
-#include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "gtest/gtest.h"
 #include "src/core/lib/iomgr/exec_ctx.h"
 #include "src/core/tsi/alts/handshaker/alts_handshaker_client.h"
 #include "src/core/tsi/alts/handshaker/alts_shared_resource.h"
@@ -33,7 +33,9 @@
 #include "src/proto/grpc/gcp/altscontext.upb.h"
 #include "test/core/test_util/test_config.h"
 #include "test/core/tsi/alts/handshaker/alts_handshaker_service_api_test_lib.h"
+#include "upb/base/string_view.h"
 #include "upb/mem/arena.hpp"
+#include "upb/message/internal/map.h"
 
 #define ALTS_TSI_HANDSHAKER_TEST_RECV_BYTES "Hello World"
 #define ALTS_TSI_HANDSHAKER_TEST_OUT_FRAME "Hello Google"
@@ -56,6 +58,8 @@
 #define ALTS_TSI_HANDSHAKER_TEST_MAX_FRAME_SIZE (2 * 1024 * 1024)
 #define ALTS_TSI_HANDSHAKER_TEST_PEER_ATTRIBUTES_KEY "peer"
 #define ALTS_TSI_HANDSHAKER_TEST_PEER_ATTRIBUTES_VALUE "attributes"
+#define ALTS_TSI_HANDSHAKER_NEGOTIATED_TRANSPORT_PROTOCOL "foo"
+#define ALTS_TSI_HANDSHAKER_PREFERRED_TRANSPORT_PROTOCOL "foo,bar,baz"
 
 using grpc_core::internal::alts_handshaker_client_check_fields_for_testing;
 using grpc_core::internal::alts_handshaker_client_get_handshaker_for_testing;
@@ -134,6 +138,7 @@ static grpc_byte_buffer* generate_handshaker_response(
       grpc_gcp_HandshakerResp_mutable_status(resp, arena.ptr());
   grpc_gcp_HandshakerStatus_set_code(status, 0);
   grpc_gcp_Identity* local_identity;
+  grpc_gcp_NegotiatedTransportProtocol* protocol;
   switch (type) {
     case INVALID:
       break;
@@ -180,6 +185,11 @@ static grpc_byte_buffer* generate_handshaker_response(
           upb_StringView_FromString(ALTS_TSI_HANDSHAKER_TEST_RECORD_PROTOCOL));
       grpc_gcp_HandshakerResult_set_max_frame_size(
           result, ALTS_TSI_HANDSHAKER_TEST_MAX_FRAME_SIZE);
+      protocol = grpc_gcp_HandshakerResult_mutable_transport_protocol(
+          result, arena.ptr());
+      grpc_gcp_NegotiatedTransportProtocol_set_transport_protocol(
+          protocol, upb_StringView_FromString(
+                        ALTS_TSI_HANDSHAKER_NEGOTIATED_TRANSPORT_PROTOCOL));
       break;
     case SERVER_NEXT:
       grpc_gcp_HandshakerResp_set_bytes_consumed(
@@ -215,6 +225,11 @@ static grpc_byte_buffer* generate_handshaker_response(
       grpc_gcp_HandshakerResult_set_record_protocol(
           result,
           upb_StringView_FromString(ALTS_TSI_HANDSHAKER_TEST_RECORD_PROTOCOL));
+      protocol = grpc_gcp_HandshakerResult_mutable_transport_protocol(
+          result, arena.ptr());
+      grpc_gcp_NegotiatedTransportProtocol_set_transport_protocol(
+          protocol, upb_StringView_FromString(
+                        ALTS_TSI_HANDSHAKER_NEGOTIATED_TRANSPORT_PROTOCOL));
       break;
     case FAILED:
       grpc_gcp_HandshakerStatus_set_code(status, 3 /* INVALID ARGUMENT */);
@@ -327,7 +342,7 @@ static void on_client_next_success_cb(tsi_result status, void* user_data,
   // Validate peer identity.
   tsi_peer peer;
   ASSERT_EQ(tsi_handshaker_result_extract_peer(result, &peer), TSI_OK);
-  ASSERT_EQ(peer.property_count, kTsiAltsNumOfPeerProperties);
+  ASSERT_EQ(peer.property_count, kTsiAltsMinNumOfPeerProperties + 1);
   ASSERT_EQ(memcmp(TSI_ALTS_CERTIFICATE_TYPE, peer.properties[0].value.data,
                    peer.properties[0].value.length),
             0);
@@ -360,25 +375,17 @@ static void on_client_next_success_cb(tsi_result status, void* user_data,
                    local_account.size),
             0);
   size_t iter = kUpb_Map_Begin;
-  grpc_gcp_AltsContext_PeerAttributesEntry* peer_attributes_entry =
-      grpc_gcp_AltsContext_peer_attributes_nextmutable(ctx, &iter);
-  ASSERT_NE(peer_attributes_entry, nullptr);
-  while (peer_attributes_entry != nullptr) {
-    upb_StringView key = grpc_gcp_AltsContext_PeerAttributesEntry_key(
-        const_cast<grpc_gcp_AltsContext_PeerAttributesEntry*>(
-            peer_attributes_entry));
-    upb_StringView val = grpc_gcp_AltsContext_PeerAttributesEntry_value(
-        const_cast<grpc_gcp_AltsContext_PeerAttributesEntry*>(
-            peer_attributes_entry));
+  upb_StringView key;
+  upb_StringView val;
+  while (grpc_gcp_AltsContext_peer_attributes_next(ctx, &key, &val, &iter)) {
     ASSERT_TRUE(upb_StringView_IsEqual(
         key, upb_StringView_FromString(
                  ALTS_TSI_HANDSHAKER_TEST_PEER_ATTRIBUTES_KEY)));
     ASSERT_TRUE(upb_StringView_IsEqual(
         val, upb_StringView_FromString(
                  ALTS_TSI_HANDSHAKER_TEST_PEER_ATTRIBUTES_VALUE)));
-    peer_attributes_entry =
-        grpc_gcp_AltsContext_peer_attributes_nextmutable(ctx, &iter);
   }
+
   // Validate security level.
   ASSERT_EQ(
       memcmp(ALTS_TSI_HANDSHAKER_TEST_SECURITY_LEVEL,
@@ -430,7 +437,7 @@ static void on_server_next_success_cb(tsi_result status, void* user_data,
   // Validate peer identity.
   tsi_peer peer;
   ASSERT_EQ(tsi_handshaker_result_extract_peer(result, &peer), TSI_OK);
-  ASSERT_EQ(peer.property_count, kTsiAltsNumOfPeerProperties);
+  ASSERT_EQ(peer.property_count, kTsiAltsMinNumOfPeerProperties + 1);
   ASSERT_EQ(memcmp(TSI_ALTS_CERTIFICATE_TYPE, peer.properties[0].value.data,
                    peer.properties[0].value.length),
             0);
@@ -463,25 +470,17 @@ static void on_server_next_success_cb(tsi_result status, void* user_data,
                    local_account.size),
             0);
   size_t iter = kUpb_Map_Begin;
-  grpc_gcp_AltsContext_PeerAttributesEntry* peer_attributes_entry =
-      grpc_gcp_AltsContext_peer_attributes_nextmutable(ctx, &iter);
-  ASSERT_NE(peer_attributes_entry, nullptr);
-  while (peer_attributes_entry != nullptr) {
-    upb_StringView key = grpc_gcp_AltsContext_PeerAttributesEntry_key(
-        const_cast<grpc_gcp_AltsContext_PeerAttributesEntry*>(
-            peer_attributes_entry));
-    upb_StringView val = grpc_gcp_AltsContext_PeerAttributesEntry_value(
-        const_cast<grpc_gcp_AltsContext_PeerAttributesEntry*>(
-            peer_attributes_entry));
+  upb_StringView key;
+  upb_StringView val;
+  while (grpc_gcp_AltsContext_peer_attributes_next(ctx, &key, &val, &iter)) {
     ASSERT_TRUE(upb_StringView_IsEqual(
         key, upb_StringView_FromString(
                  ALTS_TSI_HANDSHAKER_TEST_PEER_ATTRIBUTES_KEY)));
     ASSERT_TRUE(upb_StringView_IsEqual(
         val, upb_StringView_FromString(
                  ALTS_TSI_HANDSHAKER_TEST_PEER_ATTRIBUTES_VALUE)));
-    peer_attributes_entry =
-        grpc_gcp_AltsContext_peer_attributes_nextmutable(ctx, &iter);
   }
+
   // Check security level.
   ASSERT_EQ(
       memcmp(ALTS_TSI_HANDSHAKER_TEST_SECURITY_LEVEL,
@@ -593,7 +592,8 @@ static tsi_handshaker* create_test_handshaker(bool is_client) {
       grpc_alts_credentials_client_options_create();
   alts_tsi_handshaker_create(options, "target_name",
                              ALTS_HANDSHAKER_SERVICE_URL_FOR_TESTING, is_client,
-                             nullptr, &handshaker, 0);
+                             nullptr, &handshaker, 0,
+                             ALTS_TSI_HANDSHAKER_PREFERRED_TRANSPORT_PROTOCOL);
   alts_tsi_handshaker* alts_handshaker =
       reinterpret_cast<alts_tsi_handshaker*>(handshaker);
   alts_tsi_handshaker_set_client_vtable_for_testing(alts_handshaker, &vtable);

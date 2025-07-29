@@ -47,6 +47,7 @@
 #include "src/core/util/crash.h"
 #include "src/core/util/match.h"
 #include "test/core/test_util/build.h"
+#include "test/core/test_util/postmortem_emit.h"
 #include "test/core/test_util/test_config.h"
 
 // a set of metadata we expect to find on an event
@@ -309,10 +310,14 @@ std::string CrashMessage(const CqVerifier::Failure& failure) {
 }  // namespace
 
 void CqVerifier::FailUsingGprCrashWithStdio(const Failure& failure) {
+  LOG(INFO) << CrashMessage(failure);
+  PostMortemEmit();
   CrashWithStdio(CrashMessage(failure));
 }
 
 void CqVerifier::FailUsingGprCrash(const Failure& failure) {
+  LOG(INFO) << CrashMessage(failure);
+  PostMortemEmit();
   Crash(CrashMessage(failure));
 }
 
@@ -347,7 +352,11 @@ grpc_event CqVerifier::Step(gpr_timespec deadline) {
       if (r.type != GRPC_QUEUE_TIMEOUT) return r;
       auto now = gpr_now(deadline.clock_type);
       if (gpr_time_cmp(deadline, now) < 0) break;
-      step_fn_(Timestamp::FromTimespecRoundDown(deadline) - Timestamp::Now());
+      // Add a millisecond to ensure we overshoot the cq timeout if nothing is
+      // happening. Not doing so can lead to infinite loops in some tests.
+      // TODO(ctiller): see if there's a cleaner way to resolve this.
+      step_fn_(Timestamp::FromTimespecRoundDown(deadline) +
+               Duration::Milliseconds(1) - Timestamp::Now());
     }
     return grpc_event{GRPC_QUEUE_TIMEOUT, 0, nullptr};
   }

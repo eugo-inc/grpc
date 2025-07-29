@@ -28,8 +28,8 @@
 #include "absl/strings/string_view.h"
 #include "opencensus/tags/tag_key.h"
 #include "opencensus/trace/span.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/ext/filters/logging/logging_filter.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/surface/channel_stack_type.h"
 #include "src/core/telemetry/call_tracer.h"
 #include "src/cpp/ext/filters/census/client_filter.h"
@@ -41,7 +41,7 @@ namespace grpc {
 void RegisterOpenCensusPlugin() {
   grpc_core::ServerCallTracerFactory::RegisterGlobal(
       new grpc::internal::OpenCensusServerCallTracerFactory);
-  grpc_core::CoreConfiguration::RegisterBuilder(
+  grpc_core::CoreConfiguration::RegisterEphemeralBuilder(
       [](grpc_core::CoreConfiguration::Builder* builder) {
         builder->channel_init()
             ->RegisterFilter(GRPC_CLIENT_CHANNEL,

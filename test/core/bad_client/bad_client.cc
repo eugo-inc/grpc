@@ -29,10 +29,10 @@
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "src/core/channelz/channelz.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/ext/transport/chttp2/transport/chttp2_transport.h"
 #include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/channel/channel_args_preconditioning.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/iomgr/closure.h"
 #include "src/core/lib/iomgr/endpoint.h"
 #include "src/core/lib/iomgr/endpoint_pair.h"
@@ -79,8 +79,7 @@ static void server_setup_transport(void* ts, grpc_core::Transport* transport) {
   CHECK(GRPC_LOG_IF_ERROR(
       "SetupTransport",
       core_server->SetupTransport(transport, /*accepting_pollset=*/nullptr,
-                                  core_server->channel_args(),
-                                  /*socket_node=*/nullptr)));
+                                  core_server->channel_args())));
 }
 
 // Sets the read_done event
@@ -127,8 +126,10 @@ void grpc_run_client_side_validator(grpc_bad_client_arg* arg, uint32_t flags,
                     grpc_schedule_on_exec_ctx);
 
   // Write data
-  grpc_endpoint_write(sfd->client, &outgoing, &done_write_closure, nullptr,
-                      /*max_frame_size=*/INT_MAX);
+  grpc_event_engine::experimental::EventEngine::Endpoint::WriteArgs args;
+  args.set_max_frame_size(INT_MAX);
+  grpc_endpoint_write(sfd->client, &outgoing, &done_write_closure,
+                      std::move(args));
   grpc_core::ExecCtx::Get()->Flush();
 
   // Await completion, unless the request is large and write may not finish

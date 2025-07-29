@@ -18,7 +18,6 @@
 
 #if GRPC_ARES == 1 && defined(GRPC_WINDOWS_SOCKET_ARES_EV_DRIVER)
 
-#include <ares.h>
 #include <grpc/support/log_windows.h>
 #include <winsock2.h>
 
@@ -27,6 +26,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_format.h"
 #include "src/core/lib/address_utils/sockaddr_utils.h"
+// We pull in ares.h transitively here, ares.h is not self-contained
+// w.r.t. windows headers though, so make sure pull them in above.
 #include "src/core/lib/event_engine/ares_resolver.h"
 #include "src/core/lib/event_engine/grpc_polled_fd.h"
 #include "src/core/lib/event_engine/windows/grpc_polled_fd_windows.h"
@@ -46,8 +47,7 @@ struct iovec {
   size_t iov_len;
 };
 
-namespace grpc_event_engine {
-namespace experimental {
+namespace grpc_event_engine::experimental {
 namespace {
 
 constexpr int kRecvFromSourceAddrSize = 200;
@@ -267,6 +267,8 @@ class GrpcPolledFdWindows : public GrpcPolledFd {
             absl::StrFormat("Unknown socket_type_: %d", socket_type_));
     }
   }
+
+  bool IsCurrent() const override { return true; }
 
  private:
   enum WriteState {
@@ -810,6 +812,8 @@ class GrpcPolledFdWrapper : public GrpcPolledFd {
 
   const char* GetName() const override { return polled_fd_->GetName(); }
 
+  bool IsCurrent() const override { return true; }
+
  private:
   GrpcPolledFdWindows* polled_fd_;
 };
@@ -844,7 +848,6 @@ void GrpcPolledFdFactoryWindows::ConfigureAresChannelLocked(
   ares_set_socket_functions(channel, &kCustomSockFuncs, this);
 }
 
-}  // namespace experimental
-}  // namespace grpc_event_engine
+}  // namespace grpc_event_engine::experimental
 
 #endif  // GRPC_ARES == 1 && defined(GRPC_WINDOWS_SOCKET_ARES_EV_DRIVER)

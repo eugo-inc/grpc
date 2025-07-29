@@ -6,13 +6,16 @@
  * regenerated.
  * NO CHECKED-IN PROTOBUF GENCODE */
 
-#ifndef ENVOY_EXTENSIONS_TRANSPORT_SOCKETS_HTTP_11_PROXY_V3_UPSTREAM_HTTP_11_CONNECT_PROTO_UPBDEFS_H_
-#define ENVOY_EXTENSIONS_TRANSPORT_SOCKETS_HTTP_11_PROXY_V3_UPSTREAM_HTTP_11_CONNECT_PROTO_UPBDEFS_H_
+
+
+#ifndef ENVOY_EXTENSIONS_TRANSPORT_SOCKETS_HTTP_11_PROXY_V3_UPSTREAM_HTTP_11_CONNECT_PROTO_UPB_H__UPBDEFS_H_
+#define ENVOY_EXTENSIONS_TRANSPORT_SOCKETS_HTTP_11_PROXY_V3_UPSTREAM_HTTP_11_CONNECT_PROTO_UPB_H__UPBDEFS_H_
 
 #include "upb/reflection/def.h"
 #include "upb/reflection/internal/def_pool.h"
 
-#include "upb/port/def.inc" // Must be last.
+#include "upb/port/def.inc"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,10 +27,11 @@ UPB_INLINE const upb_MessageDef *envoy_extensions_transport_sockets_http_11_prox
   return upb_DefPool_FindMessageByName(s, "envoy.extensions.transport_sockets.http_11_proxy.v3.Http11ProxyUpstreamTransport");
 }
 
+
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif
 
 #include "upb/port/undef.inc"
 
-#endif  /* ENVOY_EXTENSIONS_TRANSPORT_SOCKETS_HTTP_11_PROXY_V3_UPSTREAM_HTTP_11_CONNECT_PROTO_UPBDEFS_H_ */
+#endif  /* ENVOY_EXTENSIONS_TRANSPORT_SOCKETS_HTTP_11_PROXY_V3_UPSTREAM_HTTP_11_CONNECT_PROTO_UPB_H__UPBDEFS_H_ */

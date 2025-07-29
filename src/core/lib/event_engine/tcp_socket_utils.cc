@@ -63,8 +63,7 @@
 #include "src/core/util/status_helper.h"
 #include "src/core/util/uri.h"
 
-namespace grpc_event_engine {
-namespace experimental {
+namespace grpc_event_engine::experimental {
 
 namespace {
 constexpr uint8_t kV4MappedPrefix[] = {0, 0, 0, 0, 0,    0,
@@ -134,9 +133,10 @@ absl::StatusOr<std::string> ResolvedAddrToUriUnixIfPossible(
     path_string = std::move(*path);
   }
 
-  absl::StatusOr<grpc_core::URI> uri = grpc_core::URI::Create(
-      std::move(scheme), /*authority=*/"", std::move(path_string),
-      /*query_parameter_pairs=*/{}, /*fragment=*/"");
+  absl::StatusOr<grpc_core::URI> uri =
+      grpc_core::URI::Create(std::move(scheme), /*user_info=*/"",
+                             /*host_port=*/"", std::move(path_string),
+                             /*query_parameter_pairs=*/{}, /*fragment=*/"");
   if (!uri.ok()) return uri.status();
   return uri->ToString();
 }
@@ -162,9 +162,9 @@ absl::StatusOr<std::string> ResolvedAddrToVsockPathIfPossible(
 absl::StatusOr<std::string> ResolvedAddrToUriVsockIfPossible(
     const EventEngine::ResolvedAddress* resolved_addr) {
   auto path = ResolvedAddrToVsockPathIfPossible(resolved_addr);
-  absl::StatusOr<grpc_core::URI> uri =
-      grpc_core::URI::Create("vsock", /*authority=*/"", std::move(*path),
-                             /*query_parameter_pairs=*/{}, /*fragment=*/"");
+  absl::StatusOr<grpc_core::URI> uri = grpc_core::URI::Create(
+      "vsock", /*user_info=*/"", /*host_port=*/"", std::move(*path),
+      /*query_parameter_pairs=*/{}, /*fragment=*/"");
   if (!uri.ok()) return uri.status();
   return uri->ToString();
 }
@@ -307,7 +307,7 @@ void ResolvedAddressSetPort(EventEngine::ResolvedAddress& resolved_addr,
   }
 }
 
-absl::optional<int> MaybeGetWildcardPortFromAddress(
+std::optional<int> MaybeGetWildcardPortFromAddress(
     const EventEngine::ResolvedAddress& addr) {
   const EventEngine::ResolvedAddress* resolved_addr = &addr;
   EventEngine::ResolvedAddress addr4_normalized;
@@ -319,7 +319,7 @@ absl::optional<int> MaybeGetWildcardPortFromAddress(
     const sockaddr_in* addr4 =
         reinterpret_cast<const sockaddr_in*>(resolved_addr->address());
     if (addr4->sin_addr.s_addr != 0) {
-      return absl::nullopt;
+      return std::nullopt;
     }
     return static_cast<int>(ntohs(addr4->sin_port));
   } else if (resolved_addr->address()->sa_family == AF_INET6) {
@@ -329,12 +329,12 @@ absl::optional<int> MaybeGetWildcardPortFromAddress(
     int i;
     for (i = 0; i < 16; i++) {
       if (addr6->sin6_addr.s6_addr[i] != 0) {
-        return absl::nullopt;
+        return std::nullopt;
       }
     }
     return static_cast<int>(ntohs(addr6->sin6_port));
   } else {
-    return absl::nullopt;
+    return std::nullopt;
   }
 }
 
@@ -426,9 +426,9 @@ absl::StatusOr<std::string> ResolvedAddressToURI(
   }
   auto path = ResolvedAddressToString(addr);
   GRPC_RETURN_IF_ERROR(path.status());
-  absl::StatusOr<grpc_core::URI> uri =
-      grpc_core::URI::Create(*scheme, /*authority=*/"", std::move(path.value()),
-                             /*query_parameter_pairs=*/{}, /*fragment=*/"");
+  absl::StatusOr<grpc_core::URI> uri = grpc_core::URI::Create(
+      *scheme, /*user_info=*/"", /*host_port=*/"", std::move(path.value()),
+      /*query_parameter_pairs=*/{}, /*fragment=*/"");
   if (!uri.ok()) return uri.status();
   return uri->ToString();
 }
@@ -446,5 +446,4 @@ absl::StatusOr<EventEngine::ResolvedAddress> URIToResolvedAddress(
       reinterpret_cast<const sockaddr*>(addr.addr), addr.len);
 }
 
-}  // namespace experimental
-}  // namespace grpc_event_engine
+}  // namespace grpc_event_engine::experimental

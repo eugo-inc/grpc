@@ -23,9 +23,9 @@
 #include <grpc/support/port_platform.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
-#include "absl/types/optional.h"
 #include "src/core/channelz/channelz.h"
 #include "src/core/ext/transport/chttp2/transport/flow_control.h"
 #include "src/core/lib/channel/channel_args.h"
@@ -45,9 +45,6 @@
 grpc_core::Transport* grpc_create_chttp2_transport(
     const grpc_core::ChannelArgs& channel_args,
     grpc_core::OrphanablePtr<grpc_endpoint> ep, bool is_client);
-
-grpc_core::RefCountedPtr<grpc_core::channelz::SocketNode>
-grpc_chttp2_transport_get_socket_node(grpc_core::Transport* transport);
 
 /// Takes ownership of \a read_buffer, which (if non-NULL) contains
 /// leftover bytes previously read from the endpoint (e.g., by handshakers).
@@ -82,13 +79,10 @@ void TestOnlyGlobalHttp2TransportDisableTransientFailureStateNotification(
 
 typedef void (*WriteTimestampsCallback)(void*, Timestamps*,
                                         grpc_error_handle error);
-typedef void* (*CopyContextFn)(Arena*);
 
 void GrpcHttp2SetWriteTimestampsCallback(WriteTimestampsCallback fn);
-void GrpcHttp2SetCopyContextFn(CopyContextFn fn);
 
 WriteTimestampsCallback GrpcHttp2GetWriteTimestampsCallback();
-CopyContextFn GrpcHttp2GetCopyContextFn();
 
 // Interprets the passed arg as a ContextList type and for each entry in the
 // passed ContextList, it executes the function set using
@@ -136,20 +130,20 @@ class HttpAnnotation : public CallTracerAnnotationInterface::Annotation {
 
   Type http_type() const { return type_; }
   gpr_timespec time() const { return time_; }
-  absl::optional<chttp2::TransportFlowControl::Stats> transport_stats() const {
+  std::optional<chttp2::TransportFlowControl::Stats> transport_stats() const {
     return transport_stats_;
   }
-  absl::optional<chttp2::StreamFlowControl::Stats> stream_stats() const {
+  std::optional<chttp2::StreamFlowControl::Stats> stream_stats() const {
     return stream_stats_;
   }
-  absl::optional<WriteStats> write_stats() const { return write_stats_; }
+  std::optional<WriteStats> write_stats() const { return write_stats_; }
 
  private:
   const Type type_;
   const gpr_timespec time_;
-  absl::optional<chttp2::TransportFlowControl::Stats> transport_stats_;
-  absl::optional<chttp2::StreamFlowControl::Stats> stream_stats_;
-  absl::optional<WriteStats> write_stats_;
+  std::optional<chttp2::TransportFlowControl::Stats> transport_stats_;
+  std::optional<chttp2::StreamFlowControl::Stats> stream_stats_;
+  std::optional<WriteStats> write_stats_;
 };
 
 }  // namespace grpc_core

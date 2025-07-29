@@ -293,7 +293,8 @@ grpc_cc_benchmark(
     ],
     deps = [
         ":fullstack_unary_ping_pong_h",
-        "//:grpcpp_chaotic_good",
+        "//src/core:chaotic_good",
+        "//src/core:endpoint_transport",
     ],
 )
 
@@ -313,6 +314,9 @@ grpc_cc_benchmark(
 grpc_cc_benchmark(
     name = "bm_opencensus_plugin",
     srcs = ["bm_opencensus_plugin.cc"],
+    tags = [
+        "grpc:fails-internally",
+    ],
     deps = [
         ":helpers_secure",
         "//:grpc_opencensus_plugin",
@@ -410,6 +414,10 @@ grpc_cc_benchmark(
         "otel/sdk/src/metrics",
     ],
     monitoring = HISTORY,
+    tags = [
+        # TODO(b/332369798): Remove after fixing bug
+        "grpc:otel-namespace-calamity",
+    ],
     deps = [
         ":helpers",
         "//src/core:metrics",

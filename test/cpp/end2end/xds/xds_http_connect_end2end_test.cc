@@ -14,9 +14,6 @@
 // limitations under the License.
 //
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <string>
 #include <vector>
 
@@ -25,8 +22,10 @@
 #include "absl/strings/str_format.h"
 #include "envoy/config/core/v3/address.pb.h"
 #include "envoy/extensions/transport_sockets/http_11_proxy/v3/upstream_http_11_connect.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "src/core/client_channel/backup_poller.h"
-#include "src/core/lib/config/config_vars.h"
+#include "src/core/config/config_vars.h"
 #include "test/core/end2end/fixtures/http_proxy_fixture.h"
 #include "test/core/test_util/resolve_localhost_ip46.h"
 #include "test/core/test_util/scoped_env_var.h"

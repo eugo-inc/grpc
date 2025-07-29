@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,9 +31,10 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
-#include "absl/types/optional.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "src/core/call/metadata_batch.h"
+#include "src/core/ext/transport/chaotic_good/chaotic_good_frame.pb.h"
 #include "src/core/lib/iomgr/timer_manager.h"
 #include "src/core/lib/promise/seq.h"
 #include "src/core/lib/resource_quota/arena.h"
@@ -40,20 +42,19 @@
 #include "src/core/lib/resource_quota/resource_quota.h"
 #include "src/core/lib/slice/slice_buffer.h"
 #include "src/core/lib/slice/slice_internal.h"
-#include "src/core/lib/transport/metadata_batch.h"
 #include "src/core/util/ref_counted_ptr.h"
 #include "test/core/event_engine/fuzzing_event_engine/fuzzing_event_engine.h"
 #include "test/core/event_engine/fuzzing_event_engine/fuzzing_event_engine.pb.h"
-#include "test/core/transport/chaotic_good/transport_test.h"
-#include "test/core/transport/util/mock_promise_endpoint.h"
+#include "test/core/transport/chaotic_good/mock_frame_transport.h"
+#include "test/core/transport/util/transport_test.h"
 
 using testing::_;
 using testing::MockFunction;
-using testing::Return;
 using testing::StrictMock;
 using testing::WithArgs;
 
 using EventEngineSlice = grpc_event_engine::experimental::Slice;
+using grpc_core::util::testing::TransportTest;
 
 namespace grpc_core {
 namespace chaotic_good {
@@ -71,53 +72,53 @@ ServerMetadataHandle TestTrailingMetadata() {
   return md;
 }
 
+ChannelArgs MakeChannelArgs(
+    std::shared_ptr<grpc_event_engine::experimental::EventEngine>
+        event_engine) {
+  return CoreConfiguration::Get()
+      .channel_args_preconditioning()
+      .PreconditionChannelArgs(nullptr)
+      .SetObject<grpc_event_engine::experimental::EventEngine>(
+          std::move(event_engine));
+}
+
+template <typename... PromiseEndpoints>
+Config MakeConfig(const ChannelArgs& channel_args,
+                  PromiseEndpoints... promise_endpoints) {
+  Config config(channel_args);
+  auto name_endpoint = [i = 0]() mutable { return absl::StrCat(++i); };
+  std::vector<int> this_is_only_here_to_unpack_the_following_statement{
+      (config.ServerAddPendingDataEndpoint(
+           ImmediateConnection(name_endpoint(), std::move(promise_endpoints))),
+       0)...};
+  return config;
+}
+
 class MockCallDestination : public UnstartedCallDestination {
  public:
+  MockCallDestination() : UnstartedCallDestination("MockCallDestination") {}
   ~MockCallDestination() override = default;
   MOCK_METHOD(void, Orphaned, (), (override));
   MOCK_METHOD(void, StartCall, (UnstartedCallHandler unstarted_call_handler),
               (override));
 };
 
+class MockServerConnectionFactory : public ServerConnectionFactory {
+ public:
+  MOCK_METHOD(PendingConnection, RequestDataConnection, (), (override));
+  void Orphaned() final {}
+};
+
 TEST_F(TransportTest, ReadAndWriteOneMessage) {
-  MockPromiseEndpoint control_endpoint(1);
-  MockPromiseEndpoint data_endpoint(2);
+  auto owned_frame_transport =
+      MakeOrphanable<MockFrameTransport>(event_engine());
+  auto* frame_transport = owned_frame_transport.get();
   auto call_destination = MakeRefCounted<StrictMock<MockCallDestination>>();
   EXPECT_CALL(*call_destination, Orphaned()).Times(1);
+  auto channel_args = MakeChannelArgs(event_engine());
   auto transport = MakeOrphanable<ChaoticGoodServerTransport>(
-      CoreConfiguration::Get()
-          .channel_args_preconditioning()
-          .PreconditionChannelArgs(nullptr),
-      std::move(control_endpoint.promise_endpoint),
-      std::move(data_endpoint.promise_endpoint), event_engine());
-  const auto server_initial_metadata =
-      EncodeProto<chaotic_good_frame::ServerMetadata>("message: 'hello'");
-  const auto server_trailing_metadata =
-      EncodeProto<chaotic_good_frame::ServerMetadata>("status: 0");
-  const auto client_initial_metadata =
-      EncodeProto<chaotic_good_frame::ClientMetadata>(
-          "path: '/demo.Service/Step'");
-  // Once we set the acceptor, expect to read some frames.
-  // We'll return a new request with a payload of "12345678".
-  control_endpoint.ExpectRead(
-      {SerializedFrameHeader(FrameType::kClientInitialMetadata, 0, 1,
-                             client_initial_metadata.length()),
-       client_initial_metadata.Copy(),
-       SerializedFrameHeader(FrameType::kMessage, 0, 1, 8),
-       EventEngineSlice::FromCopiedString("12345678"),
-       SerializedFrameHeader(FrameType::kClientEndOfStream, 0, 1, 0)},
-      event_engine().get());
-  // Once that's read we'll create a new call
+      channel_args, std::move(owned_frame_transport), MessageChunker(0, 1));
   StrictMock<MockFunction<void()>> on_done;
-  auto control_address =
-      grpc_event_engine::experimental::URIToResolvedAddress("ipv4:1.2.3.4:5678")
-          .value();
-  EXPECT_CALL(*control_endpoint.endpoint, GetPeerAddress)
-      .WillRepeatedly(
-          [&control_address]() -> const grpc_event_engine::experimental::
-                                   EventEngine::ResolvedAddress& {
-                                     return control_address;
-                                   });
   EXPECT_CALL(*call_destination, StartCall(_))
       .WillOnce(WithArgs<0>([&on_done](
                                 UnstartedCallHandler unstarted_call_handler) {
@@ -135,20 +136,17 @@ TEST_F(TransportTest, ReadAndWriteOneMessage) {
                               ->get_pointer(HttpPathMetadata())
                               ->as_string_view(),
                           "/demo.Service/Step");
-                return Empty{};
               },
               [handler]() mutable { return handler.PullMessage(); },
               [](ClientToServerNextMessage msg) {
                 EXPECT_TRUE(msg.ok());
                 EXPECT_TRUE(msg.has_value());
                 EXPECT_EQ(msg.value().payload()->JoinIntoString(), "12345678");
-                return Empty{};
               },
               [handler]() mutable { return handler.PullMessage(); },
               [](ClientToServerNextMessage msg) {
                 EXPECT_TRUE(msg.ok());
                 EXPECT_FALSE(msg.has_value());
-                return Empty{};
               },
               [handler]() mutable {
                 return handler.PushServerInitialMetadata(TestInitialMetadata());
@@ -160,30 +158,23 @@ TEST_F(TransportTest, ReadAndWriteOneMessage) {
               [handler, &on_done]() mutable {
                 handler.PushServerTrailingMetadata(TestTrailingMetadata());
                 on_done.Call();
-                return Empty{};
               });
         });
       }));
-  transport->SetCallDestination(call_destination);
+  transport->SetCallDestination(std::move(call_destination));
+  frame_transport->ExpectWrite(
+      MakeProtoFrame<ServerInitialMetadataFrame>(1, "message: \"hello\""));
+  frame_transport->ExpectWrite(MakeMessageFrame(1, "87654321"));
+  frame_transport->ExpectWrite(
+      MakeProtoFrame<ServerTrailingMetadataFrame>(1, "status: 0"));
   EXPECT_CALL(on_done, Call());
-  EXPECT_CALL(*control_endpoint.endpoint, Read)
-      .InSequence(control_endpoint.read_sequence)
-      .WillOnce(Return(false));
-  control_endpoint.ExpectWrite(
-      {SerializedFrameHeader(FrameType::kServerInitialMetadata, 0, 1,
-                             server_initial_metadata.length()),
-       server_initial_metadata.Copy()},
-      nullptr);
-  control_endpoint.ExpectWrite(
-      {SerializedFrameHeader(FrameType::kMessage, 0, 1, 8),
-       EventEngineSlice::FromCopiedString("87654321")},
-      nullptr);
-  control_endpoint.ExpectWrite(
-      {SerializedFrameHeader(FrameType::kServerTrailingMetadata, 0, 1,
-                             server_trailing_metadata.length()),
-       server_trailing_metadata.Copy()},
-      nullptr);
+  frame_transport->Read(MakeProtoFrame<ClientInitialMetadataFrame>(
+      1, "path: '/demo.Service/Step'"));
+  frame_transport->Read(MakeMessageFrame(1, "12345678"));
+  frame_transport->Read(ClientEndOfStream(1));
   // Wait until ClientTransport's internal activities to finish.
+  event_engine()->TickUntilIdle();
+  transport.reset();
   event_engine()->TickUntilIdle();
   event_engine()->UnsetGlobalHooks();
 }

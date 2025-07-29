@@ -33,6 +33,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "src/core/call/metadata_batch.h"
 #include "src/core/lib/channel/channel_fwd.h"
 #include "src/core/lib/channel/channel_stack.h"
 #include "src/core/lib/debug/trace.h"
@@ -43,7 +44,6 @@
 #include "src/core/lib/promise/poll.h"
 #include "src/core/lib/surface/channel_stack_type.h"
 #include "src/core/lib/transport/error_utils.h"
-#include "src/core/lib/transport/metadata_batch.h"
 #include "src/core/lib/transport/transport.h"
 #include "src/core/util/no_destruct.h"
 #include "src/core/util/sync.h"
@@ -75,7 +75,7 @@ ChannelStackBuilderImpl::Build() {
         gpr_free(stk);
       },
       channel_stack, stack.data(), stack.size(), channel_args(), name(),
-      channel_stack, old_blackboard_, new_blackboard_);
+      channel_stack, blackboard_);
 
   if (!error.ok()) {
     grpc_channel_stack_destroy(channel_stack);

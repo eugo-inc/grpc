@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -28,7 +29,6 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
-#include "absl/types/optional.h"
 #include "src/core/lib/debug/trace.h"
 #include "src/core/lib/promise/context.h"
 #include "src/core/lib/promise/detail/promise_factory.h"
@@ -121,9 +121,15 @@ class Waker {
     return wakeable_and_arg_.ActivityDebugTag();
   }
 
-  std::string DebugString() {
+  std::string DebugString() const {
+    if (is_unwakeable()) return "<unwakeable>";
     return absl::StrFormat("Waker{%p, %d}", wakeable_and_arg_.wakeable,
                            wakeable_and_arg_.wakeup_mask);
+  }
+
+  template <typename Sink>
+  friend void AbslStringify(Sink& sink, const Waker& waker) {
+    sink.Append(waker.DebugString());
   }
 
   // This is for tests to assert that a waker is occupied or not.
@@ -167,6 +173,11 @@ class IntraActivityWaiter {
 
   std::string DebugString() const;
 
+  template <typename Sink>
+  friend void AbslStringify(Sink& sink, const IntraActivityWaiter& waker) {
+    sink.Append(waker.DebugString());
+  }
+
  private:
   WakeupMask wakeups_ = 0;
 };
@@ -205,7 +216,7 @@ class Activity : public Orphanable {
   //   locked
   // - back up that assertion with a runtime check in debug builds (it's
   //   prohibitively expensive in non-debug builds)
-  static Activity* current() { return g_current_activity_; }
+  static Activity* current() { return current_ref(); }
 
   // Produce an activity-owning Waker. The produced waker will keep the activity
   // alive until it's awoken or dropped.
@@ -222,17 +233,16 @@ class Activity : public Orphanable {
  protected:
   // Check if this activity is the current activity executing on the current
   // thread.
-  bool is_current() const { return this == g_current_activity_; }
+  bool is_current() const { return this == current(); }
   // Check if there is an activity executing on the current thread.
-  static bool have_current() { return g_current_activity_ != nullptr; }
+  static bool have_current() { return current() != nullptr; }
   // Set the current activity at construction, clean it up at destruction.
   class ScopedActivity {
    public:
-    explicit ScopedActivity(Activity* activity)
-        : prior_activity_(g_current_activity_) {
-      g_current_activity_ = activity;
+    explicit ScopedActivity(Activity* activity) : prior_activity_(current()) {
+      current_ref() = activity;
     }
-    ~ScopedActivity() { g_current_activity_ = prior_activity_; }
+    ~ScopedActivity() { current_ref() = prior_activity_; }
     ScopedActivity(const ScopedActivity&) = delete;
     ScopedActivity& operator=(const ScopedActivity&) = delete;
 
@@ -241,9 +251,21 @@ class Activity : public Orphanable {
   };
 
  private:
+  static Activity*& current_ref() {
+#if !defined(_WIN32) || !defined(_DLL)
+    return g_current_activity_;
+#else
+    // Set during RunLoop to the Activity that's executing.
+    // Being set implies that mu_ is held.
+    static thread_local Activity* current_activity;
+    return current_activity;
+#endif
+  }
+#if !defined(_WIN32) || !defined(_DLL)
   // Set during RunLoop to the Activity that's executing.
   // Being set implies that mu_ is held.
   static thread_local Activity* g_current_activity_;
+#endif
 };
 
 // Owned pointer to one Activity.
@@ -543,7 +565,7 @@ class PromiseActivity final
   }
 
   void WakeupAsync(WakeupMask) final {
-    GRPC_LATENT_SEE_INNER_SCOPE("PromiseActivity::WakeupAsync");
+    GRPC_LATENT_SEE_SCOPE("PromiseActivity::WakeupAsync");
     wakeup_flow_.Begin(GRPC_LATENT_SEE_METADATA("Activity::Wakeup"));
     if (!wakeup_scheduled_.exchange(true, std::memory_order_acq_rel)) {
       // Can't safely run, so ask to run later.
@@ -568,7 +590,7 @@ class PromiseActivity final
   // In response to Wakeup, run the Promise state machine again until it
   // settles. Then check for completion, and if we have completed, call on_done.
   void Step() ABSL_LOCKS_EXCLUDED(mu()) {
-    GRPC_LATENT_SEE_PARENT_SCOPE("PromiseActivity::Step");
+    GRPC_LATENT_SEE_SCOPE("PromiseActivity::Step");
     wakeup_flow_.End();
     // Poll the promise until things settle out under a lock.
     mu()->Lock();
@@ -587,7 +609,7 @@ class PromiseActivity final
   // The main body of a step: set the current activity, and any contexts, and
   // then run the main polling loop. Contained in a function by itself in
   // order to keep the scoping rules a little easier in Step().
-  absl::optional<ResultType> RunStep() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mu()) {
+  std::optional<ResultType> RunStep() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mu()) {
     ScopedActivity scoped_activity(this);
     ScopedContext contexts(this);
     return StepLoop();
@@ -596,7 +618,7 @@ class PromiseActivity final
   // Similarly to RunStep, but additionally construct the promise from a
   // promise factory before entering the main loop. Called once from the
   // constructor.
-  absl::optional<ResultType> Start(Factory promise_factory)
+  std::optional<ResultType> Start(Factory promise_factory)
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(mu()) {
     ScopedActivity scoped_activity(this);
     ScopedContext contexts(this);
@@ -606,7 +628,7 @@ class PromiseActivity final
 
   // Until there are no wakeups from within and the promise is incomplete:
   // poll the promise.
-  absl::optional<ResultType> StepLoop() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mu()) {
+  std::optional<ResultType> StepLoop() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mu()) {
     CHECK(is_current());
     while (true) {
       // Run the promise.

@@ -46,7 +46,6 @@ grpc_cc_test(
         "absl/log:check",
         "gtest",
     ],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -59,7 +58,6 @@ grpc_cc_test(
     name = "timer_list_test",
     srcs = ["timer_list_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -74,7 +72,6 @@ grpc_cc_test(
         "absl/log:log",
         "gtest",
     ],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -92,7 +89,6 @@ grpc_cc_test(
         "absl/log:log",
         "gtest",
     ],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -130,7 +126,6 @@ grpc_cc_test(
     name = "wakeup_fd_posix_test",
     srcs = ["wakeup_fd_posix_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -150,7 +145,6 @@ grpc_cc_test(
         "absl/log:check",
         "gtest",
     ],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -163,10 +157,26 @@ grpc_cc_test(
 )
 
 grpc_cc_test(
+    name = "posix_write_event_sink_test",
+    srcs = ["posix_write_event_sink_test.cc"],
+    external_deps = [
+        "gtest",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    uses_event_engine = False,
+    uses_polling = False,
+    deps = [
+        "//src/core:posix_write_event_sink",
+        "//test/core/test_util:grpc_test_util",
+    ],
+)
+
+grpc_cc_test(
     name = "tcp_posix_socket_utils_test",
     srcs = ["tcp_posix_socket_utils_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -188,7 +198,6 @@ grpc_cc_test(
         "absl/log:log",
         "gtest",
     ],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -217,7 +226,6 @@ grpc_cc_test(
         "absl/log:log",
         "gtest",
     ],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -240,7 +248,6 @@ grpc_cc_test(
         "absl/log:log",
         "gtest",
     ],
-    language = "C++",
     tags = [
         "no_mac",
         "no_windows",
@@ -267,7 +274,6 @@ grpc_cc_test(
     external_deps = [
         "gtest",
     ],
-    language = "C++",
     tags = [
         "no_windows",
     ],
@@ -276,6 +282,103 @@ grpc_cc_test(
     deps = [
         "//:grpc",
         "//src/core:posix_event_engine",
+        "//test/core/test_util:grpc_test_util",
+    ],
+)
+
+grpc_cc_test(
+    name = "file_descriptor_collection_test",
+    srcs = ["file_descriptor_collection_test.cc"],
+    external_deps = [
+        "absl/log:check",
+        "absl/log:log",
+        "gtest",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    uses_event_engine = True,
+    uses_polling = True,
+    deps = [
+        "//src/core:posix_event_engine_posix_interface",
+        "//test/core/test_util:grpc_test_util",
+    ],
+)
+
+grpc_cc_test(
+    name = "poller_fork_test",
+    srcs = ["poller_fork_test.cc"],
+    external_deps = [
+        "absl/log:log",
+        "gtest",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    uses_event_engine = True,
+    uses_polling = True,
+    deps = [
+        ":posix_engine_test_utils",
+        "//:grpc++",
+        "//src/core:posix_event_engine",
+        "//test/core/event_engine:event_engine_test_utils",
+        "//test/core/test_util:grpc_test_util",
+    ],
+)
+
+grpc_cc_library(
+    name = "dns_server",
+    testonly = True,
+    srcs = ["dns_server.cc"],
+    hdrs = ["dns_server.h"],
+    external_deps = [
+        "absl/status:statusor",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        "//:gpr_platform",
+        "//:grpc++",
+        "//src/core:notification",
+    ],
+)
+
+grpc_cc_test(
+    name = "dns_fork_test",
+    srcs = ["dns_fork_test.cc"],
+    external_deps = [
+        "gtest",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    uses_event_engine = True,
+    uses_polling = True,
+    deps = [
+        ":dns_server",
+        "//:gpr_platform",
+        "//src/core:posix_event_engine",
+        "//test/core/test_util:grpc_test_util",
+    ],
+)
+
+grpc_cc_test(
+    name = "errqueue_support_test",
+    srcs = ["errqueue_support_test.cc"],
+    external_deps = [
+        "gtest",
+    ],
+    tags = [
+        # Only relevant for linux
+        "no_mac",
+        "no_windows",
+    ],
+    uses_event_engine = False,
+    uses_polling = False,
+    deps = [
+        "//src/core:posix_event_engine_internal_errqueue",
         "//test/core/test_util:grpc_test_util",
     ],
 )

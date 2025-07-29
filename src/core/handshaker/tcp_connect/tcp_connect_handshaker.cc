@@ -24,6 +24,7 @@
 #include <grpc/support/port_platform.h>
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "absl/base/thread_annotations.h"
@@ -31,13 +32,12 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/types/optional.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/handshaker/handshaker.h"
 #include "src/core/handshaker/handshaker_factory.h"
 #include "src/core/handshaker/handshaker_registry.h"
 #include "src/core/lib/address_utils/parse_address.h"
 #include "src/core/lib/channel/channel_args.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/event_engine/channel_args_endpoint_config.h"
 #include "src/core/lib/iomgr/closure.h"
 #include "src/core/lib/iomgr/endpoint.h"
@@ -119,17 +119,25 @@ void TCPConnectHandshaker::Shutdown(absl::Status /*error*/) {
 void TCPConnectHandshaker::DoHandshake(
     HandshakerArgs* args,
     absl::AnyInvocable<void(absl::Status)> on_handshake_done) {
+  // If the endpoint already exists, skip the TCP connection step.
+  // In this case, the handshaker becomes a no-op, it simply completes the
+  // handshake successfully without performing any action.
+  if (args->endpoint != nullptr) {
+    InvokeOnHandshakeDone(args, std::move(on_handshake_done), absl::OkStatus());
+    return;
+  }
   {
     MutexLock lock(&mu_);
     on_handshake_done_ = std::move(on_handshake_done);
   }
-  CHECK_EQ(args->endpoint.get(), nullptr);
   args_ = args;
-  absl::StatusOr<URI> uri = URI::Parse(
-      args->args.GetString(GRPC_ARG_TCP_HANDSHAKER_RESOLVED_ADDRESS).value());
+  absl::string_view resolved_address_text =
+      args->args.GetString(GRPC_ARG_TCP_HANDSHAKER_RESOLVED_ADDRESS).value();
+  absl::StatusOr<URI> uri = URI::Parse(resolved_address_text);
   if (!uri.ok() || !grpc_parse_uri(*uri, &addr_)) {
     MutexLock lock(&mu_);
-    FinishLocked(GRPC_ERROR_CREATE("Resolved address in invalid format"));
+    FinishLocked(GRPC_ERROR_CREATE(absl::StrCat(
+        "Resolved address in invalid format: ", resolved_address_text)));
     return;
   }
   bind_endpoint_to_pollset_ =

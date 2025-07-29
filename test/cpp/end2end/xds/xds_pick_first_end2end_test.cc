@@ -13,10 +13,8 @@
 // limitations under the License.
 //
 
-#include <gmock/gmock.h>
 #include <grpc/event_engine/endpoint_config.h>
 #include <grpcpp/support/status.h>
-#include <gtest/gtest.h>
 #include <unistd.h>
 
 #include <cstddef>
@@ -28,9 +26,11 @@
 #include "absl/strings/str_cat.h"
 #include "envoy/config/cluster/v3/cluster.pb.h"
 #include "envoy/extensions/load_balancing_policies/pick_first/v3/pick_first.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "src/core/client_channel/backup_poller.h"
+#include "src/core/config/config_vars.h"
 #include "src/core/lib/address_utils/sockaddr_utils.h"
-#include "src/core/lib/config/config_vars.h"
 #include "src/core/load_balancing/xds/xds_channel_args.h"
 #include "src/core/resolver/fake/fake_resolver.h"
 #include "src/core/util/env.h"

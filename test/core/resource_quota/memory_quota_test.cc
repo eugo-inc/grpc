@@ -63,16 +63,18 @@ TEST(MemoryRequestTest, MinMax) {
 // MemoryQuotaTest
 //
 
-TEST(MemoryQuotaTest, NoOp) { MemoryQuota("foo"); }
+TEST(MemoryQuotaTest, NoOp) {
+  MemoryQuota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
+}
 
 TEST(MemoryQuotaTest, CreateAllocatorNoOp) {
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   auto memory_allocator = memory_quota.CreateMemoryAllocator("bar");
 }
 
 TEST(MemoryQuotaTest, CreateObjectFromAllocator) {
   ExecCtx exec_ctx;
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   auto memory_allocator = memory_quota.CreateMemoryAllocator("bar");
   auto object = memory_allocator.MakeUnique<Sized<4096>>();
 }
@@ -80,7 +82,7 @@ TEST(MemoryQuotaTest, CreateObjectFromAllocator) {
 TEST(MemoryQuotaTest, CreateSomeObjectsAndExpectReclamation) {
   ExecCtx exec_ctx;
 
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   memory_quota.SetSize(4096);
   auto memory_allocator = memory_quota.CreateMemoryOwner();
   auto object = memory_allocator.MakeUnique<Sized<2048>>();
@@ -88,7 +90,7 @@ TEST(MemoryQuotaTest, CreateSomeObjectsAndExpectReclamation) {
   auto checker1 = CallChecker::Make();
   memory_allocator.PostReclaimer(
       ReclamationPass::kDestructive,
-      [&object, checker1](absl::optional<ReclamationSweep> sweep) {
+      [&object, checker1](std::optional<ReclamationSweep> sweep) {
         checker1->Called();
         EXPECT_TRUE(sweep.has_value());
         object.reset();
@@ -100,7 +102,7 @@ TEST(MemoryQuotaTest, CreateSomeObjectsAndExpectReclamation) {
   auto checker2 = CallChecker::Make();
   memory_allocator.PostReclaimer(
       ReclamationPass::kDestructive,
-      [&object2, checker2](absl::optional<ReclamationSweep> sweep) {
+      [&object2, checker2](std::optional<ReclamationSweep> sweep) {
         checker2->Called();
         EXPECT_TRUE(sweep.has_value());
         object2.reset();
@@ -111,7 +113,7 @@ TEST(MemoryQuotaTest, CreateSomeObjectsAndExpectReclamation) {
 }
 
 TEST(MemoryQuotaTest, ReserveRangeNoPressure) {
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   auto memory_allocator = memory_quota.CreateMemoryAllocator("bar");
   size_t total = 0;
   for (int i = 0; i < 10000; i++) {
@@ -124,7 +126,7 @@ TEST(MemoryQuotaTest, ReserveRangeNoPressure) {
 }
 
 TEST(MemoryQuotaTest, MakeSlice) {
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   auto memory_allocator = memory_quota.CreateMemoryAllocator("bar");
   std::vector<grpc_slice> slices;
   for (int i = 1; i < 1000; i++) {
@@ -141,7 +143,7 @@ TEST(MemoryQuotaTest, MakeSlice) {
 
 TEST(MemoryQuotaTest, ContainerAllocator) {
   ExecCtx exec_ctx;
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   auto memory_allocator = memory_quota.CreateMemoryAllocator("bar");
   Vector<int> vec(&memory_allocator);
   for (int i = 0; i < 100000; i++) {
@@ -152,7 +154,7 @@ TEST(MemoryQuotaTest, ContainerAllocator) {
 TEST(MemoryQuotaTest, NoBunchingIfIdle) {
   // Ensure that we don't queue up useless reclamations even if there are no
   // memory reclamations needed.
-  MemoryQuota memory_quota("foo");
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
   std::atomic<size_t> count_reclaimers_called{0};
 
   for (size_t i = 0; i < 10000; i++) {
@@ -160,7 +162,7 @@ TEST(MemoryQuotaTest, NoBunchingIfIdle) {
     auto memory_owner = memory_quota.CreateMemoryOwner();
     memory_owner.PostReclaimer(
         ReclamationPass::kDestructive,
-        [&count_reclaimers_called](absl::optional<ReclamationSweep> sweep) {
+        [&count_reclaimers_called](std::optional<ReclamationSweep> sweep) {
           EXPECT_FALSE(sweep.has_value());
           count_reclaimers_called.fetch_add(1, std::memory_order_relaxed);
         });
@@ -179,12 +181,28 @@ TEST(MemoryQuotaTest, AllMemoryQuotas) {
     return all_names;
   };
 
-  auto m1 = MakeMemoryQuota("m1");
-  auto m2 = MakeMemoryQuota("m2");
+  auto m1 = MakeMemoryQuota(MakeRefCounted<channelz::ResourceQuotaNode>("m1"));
+  auto m2 = MakeMemoryQuota(MakeRefCounted<channelz::ResourceQuotaNode>("m2"));
 
   EXPECT_EQ(gather(), std::set<std::string>({"m1", "m2"}));
   m1.reset();
   EXPECT_EQ(gather(), std::set<std::string>({"m2"}));
+}
+
+TEST(MemoryQuotaTest, ContainerMemoryAccountedFor) {
+  MemoryQuota memory_quota(MakeRefCounted<channelz::ResourceQuotaNode>("foo"));
+  memory_quota.SetSize(1000000);
+  EXPECT_EQ(ContainerMemoryPressure(), 0.0);
+  auto owner = memory_quota.CreateMemoryOwner();
+  const double original_memory_pressure =
+      owner.GetPressureInfo().instantaneous_pressure;
+  EXPECT_LT(original_memory_pressure, 0.01);
+  SetContainerMemoryPressure(1.0);
+  EXPECT_EQ(owner.GetPressureInfo().instantaneous_pressure, 1.0);
+  SetContainerMemoryPressure(0.0);
+  EXPECT_EQ(owner.GetPressureInfo().instantaneous_pressure,
+            original_memory_pressure);
+  SetContainerMemoryPressure(0.0);
 }
 
 }  // namespace testing

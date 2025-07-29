@@ -17,7 +17,6 @@
 //
 
 #include <address_sorting/address_sorting.h>
-#include <gmock/gmock.h>
 #include <grpc/grpc.h>
 #include <grpc/support/alloc.h>
 #include <grpc/support/string_util.h>
@@ -30,12 +29,12 @@
 
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+#include "gmock/gmock.h"
 #include "src/core/client_channel/client_channel_filter.h"
+#include "src/core/config/config_vars.h"
 #include "src/core/lib/address_utils/sockaddr_utils.h"
 #include "src/core/lib/channel/channel_args.h"
-#include "src/core/lib/config/config_vars.h"
 #include "src/core/lib/iomgr/combiner.h"
-#include "src/core/lib/iomgr/executor.h"
 #include "src/core/lib/iomgr/iomgr.h"
 #include "src/core/lib/iomgr/resolve_address.h"
 #include "src/core/resolver/dns/c_ares/grpc_ares_wrapper.h"

@@ -66,18 +66,19 @@ void CancelAfterAccept(CoreEnd2endTest& test,
   EXPECT_TRUE(client_close.was_cancelled());
 }
 
-CORE_END2END_TEST(CoreEnd2endTest, CancelAfterAccept) {
+CORE_END2END_TEST(CoreEnd2endTests, CancelAfterAccept) {
   CancelAfterAccept(*this, std::make_unique<CancelCancellationMode>(),
                     Duration::Seconds(5));
 }
 
-CORE_END2END_TEST(CoreDeadlineTest, DeadlineAfterAccept) {
+CORE_END2END_TEST(CoreDeadlineTests, DeadlineAfterAccept) {
   CancelAfterAccept(*this, std::make_unique<DeadlineCancellationMode>(),
                     Duration::Seconds(5));
 }
 
-CORE_END2END_TEST(CoreClientChannelTest, DeadlineAfterAcceptWithServiceConfig) {
-  InitServer(ChannelArgs());
+CORE_END2END_TEST(CoreClientChannelTests,
+                  DeadlineAfterAcceptWithServiceConfig) {
+  InitServer(DefaultServerArgs());
   InitClient(ChannelArgs().Set(
       GRPC_ARG_SERVICE_CONFIG,
       absl::StrCat(

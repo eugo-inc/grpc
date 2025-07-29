@@ -17,10 +17,10 @@
 
 #include <memory>
 #include <utility>
+#include <variant>
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/variant.h"
 #include "envoy/config/core/v3/address.upb.h"
 #include "envoy/config/core/v3/address.upbdefs.h"
 #include "envoy/extensions/filters/http/gcp_authn/v3/gcp_authn.upb.h"
@@ -34,18 +34,12 @@
 #include "src/core/xds/grpc/xds_common_types.h"
 #include "src/core/xds/grpc/xds_common_types_parser.h"
 #include "upb/base/string_view.h"
+#include "upb/message/array.h"
+#include "upb/message/map.h"
+#include "upb/message/message.h"
 #include "upb/text/encode.h"
 
 namespace grpc_core {
-
-// TODO(roth): Remove this once GCP auth filter support is stable.
-bool XdsGcpAuthFilterEnabled() {
-  auto value = GetEnv("GRPC_EXPERIMENTAL_XDS_GCP_AUTHENTICATION_FILTER");
-  if (!value.has_value()) return false;
-  bool parsed_value;
-  bool parse_succeeded = gpr_parse_bool_value(value->c_str(), &parsed_value);
-  return parse_succeeded && parsed_value;
-}
 
 namespace {
 
@@ -53,7 +47,7 @@ std::unique_ptr<XdsMetadataValue> ParseGcpAuthnAudience(
     const XdsResourceType::DecodeContext& context, XdsExtension extension,
     ValidationErrors* errors) {
   absl::string_view* serialized_proto =
-      absl::get_if<absl::string_view>(&extension.value);
+      std::get_if<absl::string_view>(&extension.value);
   if (serialized_proto == nullptr) {
     errors->AddError("could not parse audience metadata");
     return nullptr;
@@ -64,7 +58,7 @@ std::unique_ptr<XdsMetadataValue> ParseGcpAuthnAudience(
     errors->AddError("could not parse audience metadata");
     return nullptr;
   }
-  if (GRPC_TRACE_FLAG_ENABLED_OBJ(*context.tracer) && ABSL_VLOG_IS_ON(2)) {
+  if (GRPC_TRACE_FLAG_ENABLED(xds_client) && ABSL_VLOG_IS_ON(2)) {
     const upb_MessageDef* msg_type =
         envoy_extensions_filters_http_gcp_authn_v3_Audience_getmsgdef(
             context.symtab);
@@ -88,7 +82,7 @@ std::unique_ptr<XdsMetadataValue> ParseAddress(
     const XdsResourceType::DecodeContext& context, XdsExtension extension,
     ValidationErrors* errors) {
   absl::string_view* serialized_proto =
-      absl::get_if<absl::string_view>(&extension.value);
+      std::get_if<absl::string_view>(&extension.value);
   if (serialized_proto == nullptr) {
     errors->AddError("could not parse address metadata");
     return nullptr;
@@ -99,7 +93,7 @@ std::unique_ptr<XdsMetadataValue> ParseAddress(
     errors->AddError("could not parse address metadata");
     return nullptr;
   }
-  if (GRPC_TRACE_FLAG_ENABLED_OBJ(*context.tracer) && ABSL_VLOG_IS_ON(2)) {
+  if (GRPC_TRACE_FLAG_ENABLED(xds_client) && ABSL_VLOG_IS_ON(2)) {
     const upb_MessageDef* msg_type =
         envoy_config_core_v3_Address_getmsgdef(context.symtab);
     char buf[10240];
@@ -126,27 +120,24 @@ XdsMetadataMap ParseXdsMetadataMap(
   XdsMetadataMap metadata_map;
   if (metadata == nullptr) return metadata_map;  // Not present == empty.
   // First, try typed_filter_metadata.
+  envoy_config_core_v3_Metadata* metadata_upb =
+      (envoy_config_core_v3_Metadata*)metadata;
   size_t iter = kUpb_Map_Begin;
-  const envoy_config_core_v3_Metadata_TypedFilterMetadataEntry* typed_entry;
-  while (
-      (typed_entry = envoy_config_core_v3_Metadata_typed_filter_metadata_next(
-           metadata, &iter)) != nullptr) {
-    absl::string_view key = UpbStringToAbsl(
-        envoy_config_core_v3_Metadata_TypedFilterMetadataEntry_key(
-            typed_entry));
+  upb_StringView typed_filter_metadata_key_view;
+  const google_protobuf_Any* typed_filter_metadata_val;
+  while (envoy_config_core_v3_Metadata_typed_filter_metadata_next(
+      metadata_upb, &typed_filter_metadata_key_view, &typed_filter_metadata_val,
+      &iter)) {
+    absl::string_view key = UpbStringToAbsl(typed_filter_metadata_key_view);
     ValidationErrors::ScopedField field(
         errors, absl::StrCat(".typed_filter_metadata[", key, "]"));
-    auto extension = ExtractXdsExtension(
-        context,
-        envoy_config_core_v3_Metadata_TypedFilterMetadataEntry_value(
-            typed_entry),
-        errors);
+    auto extension =
+        ExtractXdsExtension(context, typed_filter_metadata_val, errors);
     if (!extension.has_value()) continue;
     // TODO(roth): If we start to need a lot of types here, refactor
     // this into a separate registry.
     std::unique_ptr<XdsMetadataValue> metadata_value;
-    if (XdsGcpAuthFilterEnabled() &&
-        extension->type == XdsGcpAuthnAudienceMetadataValue::Type()) {
+    if (extension->type == XdsGcpAuthnAudienceMetadataValue::Type()) {
       metadata_value =
           ParseGcpAuthnAudience(context, std::move(*extension), errors);
     } else if (XdsHttpConnectEnabled() &&
@@ -158,15 +149,13 @@ XdsMetadataMap ParseXdsMetadataMap(
     }
   }
   // Then, try filter_metadata.
-  iter = kUpb_Map_Begin;
-  const envoy_config_core_v3_Metadata_FilterMetadataEntry* entry;
-  while ((entry = envoy_config_core_v3_Metadata_filter_metadata_next(
-              metadata, &iter)) != nullptr) {
-    absl::string_view key = UpbStringToAbsl(
-        envoy_config_core_v3_Metadata_FilterMetadataEntry_key(entry));
-    auto json = ParseProtobufStructToJson(
-        context,
-        envoy_config_core_v3_Metadata_FilterMetadataEntry_value(entry));
+  size_t iter2 = kUpb_Map_Begin;
+  upb_StringView filter_metadata_key_view;
+  const google_protobuf_Struct* filter_metadata_val;
+  while (envoy_config_core_v3_Metadata_filter_metadata_next(
+      metadata_upb, &filter_metadata_key_view, &filter_metadata_val, &iter2)) {
+    absl::string_view key = UpbStringToAbsl(filter_metadata_key_view);
+    auto json = ParseProtobufStructToJson(context, filter_metadata_val);
     if (!json.ok()) {
       ValidationErrors::ScopedField field(
           errors, absl::StrCat(".filter_metadata[", key, "]"));

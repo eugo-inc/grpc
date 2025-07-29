@@ -191,6 +191,11 @@ static tsi_result tsi_fake_frame_decode(const unsigned char* incoming_bytes,
     frame->allocated_size = TSI_FAKE_FRAME_INITIAL_ALLOCATED_SIZE;
     frame->data =
         static_cast<unsigned char*>(gpr_malloc(frame->allocated_size));
+    // Initialize `data` to some recognizably bad values.
+    // There's some debug code paths where we stringify the entire buffer, and
+    // doing so leads to ubsan failures on those code paths -- which are
+    // commonly hit using fuzzers.
+    memset(frame->data, 0xab, frame->allocated_size);
   }
 
   if (frame->offset < TSI_FAKE_FRAME_HEADER_SIZE) {
@@ -515,12 +520,29 @@ static tsi_result fake_zero_copy_grpc_protector_max_frame_size(
   return TSI_OK;
 }
 
+static bool fake_zero_copy_grpc_protector_read_frame_size(
+    tsi_zero_copy_grpc_protector*, grpc_slice_buffer* protected_slices,
+    uint32_t* frame_size) {
+  if (frame_size == nullptr) return false;
+  uint32_t parsed_frame_size = 0;
+  while (protected_slices->length >= TSI_FAKE_FRAME_HEADER_SIZE) {
+    uint32_t parsed_frame_size = read_frame_size(protected_slices);
+    if (parsed_frame_size <= 4) {
+      LOG(ERROR) << "Invalid frame size.";
+      return false;
+    }
+  }
+  *frame_size = parsed_frame_size;
+  return true;
+}
+
 static const tsi_zero_copy_grpc_protector_vtable
     zero_copy_grpc_protector_vtable = {
         fake_zero_copy_grpc_protector_protect,
         fake_zero_copy_grpc_protector_unprotect,
         fake_zero_copy_grpc_protector_destroy,
         fake_zero_copy_grpc_protector_max_frame_size,
+        fake_zero_copy_grpc_protector_read_frame_size,
 };
 
 // --- tsi_handshaker_result methods implementation. ---

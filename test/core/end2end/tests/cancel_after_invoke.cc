@@ -36,11 +36,6 @@ const Duration kDeadlineTimeout = Duration::Seconds(2);
 void CancelAfterInvoke6(CoreEnd2endTest& test,
                         std::unique_ptr<CancellationMode> mode,
                         Duration timeout) {
-  test.InitClient(ChannelArgs());
-  // This is a workaround for the flakiness that if the server ever enters
-  // GracefulShutdown for whatever reason while the client has already been
-  // shutdown, the test would not timeout and fail.
-  test.InitServer(ChannelArgs().Set(GRPC_ARG_PING_TIMEOUT_MS, 5000));
   auto c = test.NewClientCall("/service/method").Timeout(timeout).Create();
   IncomingStatusOnClient server_status;
   IncomingMetadata server_initial_metadata;
@@ -62,11 +57,6 @@ void CancelAfterInvoke6(CoreEnd2endTest& test,
 void CancelAfterInvoke5(CoreEnd2endTest& test,
                         std::unique_ptr<CancellationMode> mode,
                         Duration timeout) {
-  test.InitClient(ChannelArgs());
-  // This is a workaround for the flakiness that if the server ever enters
-  // GracefulShutdown for whatever reason while the client has already been
-  // shutdown, the test would not timeout and fail.
-  test.InitServer(ChannelArgs().Set(GRPC_ARG_PING_TIMEOUT_MS, 5000));
   auto c = test.NewClientCall("/service/method").Timeout(timeout).Create();
   IncomingStatusOnClient server_status;
   IncomingMetadata server_initial_metadata;
@@ -86,11 +76,6 @@ void CancelAfterInvoke5(CoreEnd2endTest& test,
 void CancelAfterInvoke4(CoreEnd2endTest& test,
                         std::unique_ptr<CancellationMode> mode,
                         Duration timeout) {
-  test.InitClient(ChannelArgs());
-  // This is a workaround for the flakiness that if the server ever enters
-  // GracefulShutdown for whatever reason while the client has already been
-  // shutdown, the test would not timeout and fail.
-  test.InitServer(ChannelArgs().Set(GRPC_ARG_PING_TIMEOUT_MS, 5000));
   auto c = test.NewClientCall("/service/method").Timeout(timeout).Create();
   IncomingStatusOnClient server_status;
   IncomingMetadata server_initial_metadata;
@@ -109,11 +94,6 @@ void CancelAfterInvoke4(CoreEnd2endTest& test,
 void CancelAfterInvoke3(CoreEnd2endTest& test,
                         std::unique_ptr<CancellationMode> mode,
                         Duration timeout) {
-  test.InitClient(ChannelArgs());
-  // This is a workaround for the flakiness that if the server ever enters
-  // GracefulShutdown for whatever reason while the client has already been
-  // shutdown, the test would not timeout and fail.
-  test.InitServer(ChannelArgs().Set(GRPC_ARG_PING_TIMEOUT_MS, 5000));
   auto c = test.NewClientCall("/service/method").Timeout(timeout).Create();
   IncomingStatusOnClient server_status;
   IncomingMetadata server_initial_metadata;
@@ -128,42 +108,42 @@ void CancelAfterInvoke3(CoreEnd2endTest& test,
               ::testing::AnyOf(mode->ExpectedStatus(), GRPC_STATUS_INTERNAL));
 }
 
-CORE_END2END_TEST(CoreEnd2endTest, CancelAfterInvoke6) {
+CORE_END2END_TEST(CoreEnd2endTests, CancelAfterInvoke6) {
   CancelAfterInvoke6(*this, std::make_unique<CancelCancellationMode>(),
                      kCancelTimeout);
 }
 
-CORE_END2END_TEST(CoreEnd2endTest, CancelAfterInvoke5) {
+CORE_END2END_TEST(CoreEnd2endTests, CancelAfterInvoke5) {
   CancelAfterInvoke5(*this, std::make_unique<CancelCancellationMode>(),
                      kCancelTimeout);
 }
 
-CORE_END2END_TEST(CoreEnd2endTest, CancelAfterInvoke4) {
+CORE_END2END_TEST(CoreEnd2endTests, CancelAfterInvoke4) {
   CancelAfterInvoke4(*this, std::make_unique<CancelCancellationMode>(),
                      kCancelTimeout);
 }
 
-CORE_END2END_TEST(CoreEnd2endTest, CancelAfterInvoke3) {
+CORE_END2END_TEST(CoreEnd2endTests, CancelAfterInvoke3) {
   CancelAfterInvoke3(*this, std::make_unique<CancelCancellationMode>(),
                      kCancelTimeout);
 }
 
-CORE_END2END_TEST(CoreDeadlineTest, DeadlineAfterInvoke6) {
+CORE_END2END_TEST(CoreDeadlineTests, DeadlineAfterInvoke6) {
   CancelAfterInvoke6(*this, std::make_unique<DeadlineCancellationMode>(),
                      kDeadlineTimeout);
 }
 
-CORE_END2END_TEST(CoreDeadlineTest, DeadlineAfterInvoke5) {
+CORE_END2END_TEST(CoreDeadlineTests, DeadlineAfterInvoke5) {
   CancelAfterInvoke5(*this, std::make_unique<DeadlineCancellationMode>(),
                      kDeadlineTimeout);
 }
 
-CORE_END2END_TEST(CoreDeadlineTest, DeadlineAfterInvoke4) {
+CORE_END2END_TEST(CoreDeadlineTests, DeadlineAfterInvoke4) {
   CancelAfterInvoke4(*this, std::make_unique<DeadlineCancellationMode>(),
                      kDeadlineTimeout);
 }
 
-CORE_END2END_TEST(CoreDeadlineTest, DeadlineAfterInvoke3) {
+CORE_END2END_TEST(CoreDeadlineTests, DeadlineAfterInvoke3) {
   CancelAfterInvoke3(*this, std::make_unique<DeadlineCancellationMode>(),
                      kDeadlineTimeout);
 }

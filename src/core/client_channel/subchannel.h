@@ -27,7 +27,9 @@
 #include <memory>
 
 #include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
+#include "src/core/call/metadata_batch.h"
 #include "src/core/client_channel/connector.h"
 #include "src/core/client_channel/subchannel_pool_interface.h"
 #include "src/core/lib/address_utils/sockaddr_utils.h"
@@ -43,7 +45,6 @@
 #include "src/core/lib/resource_quota/arena.h"
 #include "src/core/lib/slice/slice.h"
 #include "src/core/lib/transport/connectivity_state.h"
-#include "src/core/lib/transport/metadata_batch.h"
 #include "src/core/lib/transport/transport.h"
 #include "src/core/util/backoff.h"
 #include "src/core/util/debug_location.h"
@@ -56,6 +57,11 @@
 #include "src/core/util/time_precise.h"
 #include "src/core/util/unique_type_name.h"
 #include "src/core/util/work_serializer.h"
+
+/** This arg is intended for internal use only, primarily
+ *  for passing endpoint information during subchannel creation or connection.
+ */
+#define GRPC_ARG_SUBCHANNEL_ENDPOINT "grpc.internal.subchannel_endpoint"
 
 namespace grpc_core {
 
@@ -79,6 +85,8 @@ class ConnectedSubchannel : public RefCounted<ConnectedSubchannel> {
   virtual size_t GetInitialCallSizeEstimate() const = 0;
   virtual void Ping(grpc_closure* on_initiate, grpc_closure* on_ack) = 0;
 
+  virtual channelz::SubchannelNode* channelz_node() const = 0;
+
  protected:
   explicit ConnectedSubchannel(const ChannelArgs& args);
 
@@ -94,7 +102,6 @@ class SubchannelCall final {
   struct Args {
     RefCountedPtr<ConnectedSubchannel> connected_subchannel;
     grpc_polling_entity* pollent;
-    Slice path;
     gpr_cycle_counter start_time;
     Timestamp deadline;
     Arena* arena;
@@ -168,14 +175,8 @@ class Subchannel final : public DualRefCounted<Subchannel> {
     // Invoked whenever the subchannel's connectivity state changes.
     // There will be only one invocation of this method on a given watcher
     // instance at any given time.
-    // A ref to the watcher is passed in here so that the implementation
-    // can unref it in the appropriate synchronization context (e.g.,
-    // inside a WorkSerializer).
-    // TODO(roth): Figure out a cleaner way to guarantee that the ref is
-    // released in the right context.
-    virtual void OnConnectivityStateChange(
-        RefCountedPtr<ConnectivityStateWatcherInterface> self,
-        grpc_connectivity_state state, const absl::Status& status) = 0;
+    virtual void OnConnectivityStateChange(grpc_connectivity_state state,
+                                           const absl::Status& status) = 0;
 
     virtual grpc_pollset_set* interested_parties() = 0;
   };
@@ -307,10 +308,9 @@ class Subchannel final : public DualRefCounted<Subchannel> {
 
    private:
     Subchannel* subchannel_;
-    // TODO(roth): Once we can use C++-14 heterogeneous lookups, this can
-    // be a set instead of a map.
-    std::map<ConnectivityStateWatcherInterface*,
-             RefCountedPtr<ConnectivityStateWatcherInterface>>
+    absl::flat_hash_set<RefCountedPtr<ConnectivityStateWatcherInterface>,
+                        RefCountedPtrHash<ConnectivityStateWatcherInterface>,
+                        RefCountedPtrEq<ConnectivityStateWatcherInterface>>
         watchers_;
   };
 
@@ -335,6 +335,9 @@ class Subchannel final : public DualRefCounted<Subchannel> {
   RefCountedPtr<SubchannelPoolInterface> subchannel_pool_;
   // Subchannel key that identifies this subchannel in the subchannel pool.
   const SubchannelKey key_;
+  // boolean value that identifies this subchannel is created from event engine
+  // endpoint.
+  const bool created_from_endpoint_;
   // Actual address to connect to.  May be different than the address in
   // key_ if overridden by proxy mapper.
   grpc_resolved_address address_for_connect_;

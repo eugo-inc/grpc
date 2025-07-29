@@ -21,12 +21,12 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "src/core/util/json/json.h"
 #include "src/core/util/json/json_args.h"
 #include "src/core/util/json/json_object_loader.h"
@@ -85,6 +85,10 @@ class GrpcXdsBootstrap final : public XdsBootstrap {
       return servers;
     }
 
+    bool FallbackOnReachabilityOnly() const override {
+      return fallback_on_reachability_only_;
+    }
+
     const std::string& client_listener_resource_name_template() const {
       return client_listener_resource_name_template_;
     }
@@ -94,6 +98,7 @@ class GrpcXdsBootstrap final : public XdsBootstrap {
    private:
     std::vector<GrpcXdsServer> servers_;
     std::string client_listener_resource_name_template_;
+    bool fallback_on_reachability_only_;
   };
 
   // Creates bootstrap object from json_string.
@@ -151,7 +156,7 @@ class GrpcXdsBootstrap final : public XdsBootstrap {
 
  private:
   std::vector<GrpcXdsServer> servers_;
-  absl::optional<GrpcNode> node_;
+  std::optional<GrpcNode> node_;
   std::string client_default_listener_resource_name_template_;
   std::string server_listener_resource_name_template_;
   std::map<std::string, GrpcAuthority> authorities_;

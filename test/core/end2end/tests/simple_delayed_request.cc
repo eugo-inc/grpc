@@ -31,7 +31,7 @@
 namespace grpc_core {
 namespace {
 
-CORE_END2END_TEST(Http2SingleHopTest, SimpleDelayedRequestShort) {
+CORE_END2END_TEST(Http2SingleHopTests, SimpleDelayedRequestShort) {
   InitClient(ChannelArgs()
                  .Set(GRPC_ARG_INITIAL_RECONNECT_BACKOFF_MS, 1000)
                  .Set(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000)
@@ -47,7 +47,7 @@ CORE_END2END_TEST(Http2SingleHopTest, SimpleDelayedRequestShort) {
       .RecvInitialMetadata(server_initial_metadata)
       .RecvStatusOnClient(server_status);
   LOG(ERROR) << "Start server";
-  InitServer(ChannelArgs());
+  InitServer(DefaultServerArgs());
   auto s = RequestCall(101);
   Expect(101, true);
   Step();

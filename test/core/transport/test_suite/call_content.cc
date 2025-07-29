@@ -81,7 +81,7 @@ TRANSPORT_TEST(UnaryWithSomeContent) {
         initiator.FinishSends();
         return initiator.PullServerInitialMetadata();
       },
-      [&](ValueOrFailure<absl::optional<ServerMetadataHandle>> md) {
+      [&](ValueOrFailure<std::optional<ServerMetadataHandle>> md) {
         EXPECT_TRUE(md.ok());
         EXPECT_TRUE(md.value().has_value());
         EXPECT_THAT(LowerMetadata(***md),
@@ -103,7 +103,6 @@ TRANSPORT_TEST(UnaryWithSomeContent) {
         EXPECT_TRUE(md.ok());
         EXPECT_THAT(LowerMetadata(**md),
                     UnorderedElementsAreArray(server_trailing_metadata));
-        return Empty{};
       });
   auto handler = TickUntilServerCall();
   SpawnTestSeq(
@@ -137,9 +136,21 @@ TRANSPORT_TEST(UnaryWithSomeContent) {
         auto md = Arena::MakePooledForOverwrite<ServerMetadata>();
         FillMetadata(server_trailing_metadata, *md);
         handler.PushServerTrailingMetadata(std::move(md));
-        return Empty{};
       });
   WaitForAllPendingWork();
+}
+
+TEST(TransportTest, UnaryWithSomeContentRegression1) {
+  UnaryWithSomeContent(ParseTestProto(
+      R"pb(
+        event_engine_actions {
+          run_delay: 9223372036854775807
+          run_delay: 16903226036976823336
+          assign_ports: 4294967295
+          connections { write_size: 0 }
+        }
+        config_vars { verbosity: "debug" dns_resolver: "" experiments: "" }
+        rng: 1)pb"));
 }
 
 }  // namespace grpc_core

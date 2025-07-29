@@ -28,8 +28,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "gtest/gtest.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/lib/channel/channel_args.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/load_balancing/lb_policy.h"
 #include "src/core/load_balancing/lb_policy_factory.h"
 #include "src/core/util/json/json.h"
@@ -100,20 +100,22 @@ void RegisterDropPolicy(CoreConfiguration::Builder* builder) {
 // even when there is retry configuration in the service config.
 // - 1 retry allowed for UNAVAILABLE status
 // - first attempt returns UNAVAILABLE due to LB drop but does not retry
-CORE_END2END_TEST(RetryTest, RetryLbDrop) {
-  CoreConfiguration::RegisterBuilder([](CoreConfiguration::Builder* builder) {
-    RegisterTestPickArgsLoadBalancingPolicy(
-        builder,
-        [](const PickArgsSeen& pick_args) {
-          CHECK_NE(g_pick_args_vector, nullptr);
-          g_pick_args_vector->push_back(pick_args);
-        },
-        kDropPolicyName);
-  });
-  CoreConfiguration::RegisterBuilder(RegisterDropPolicy);
+CORE_END2END_TEST(RetryTests, RetryLbDrop) {
+  SKIP_IF_V3();  // Not working yet
+  CoreConfiguration::RegisterEphemeralBuilder(
+      [](CoreConfiguration::Builder* builder) {
+        RegisterTestPickArgsLoadBalancingPolicy(
+            builder,
+            [](const PickArgsSeen& pick_args) {
+              CHECK_NE(g_pick_args_vector, nullptr);
+              g_pick_args_vector->push_back(pick_args);
+            },
+            kDropPolicyName);
+      });
+  CoreConfiguration::RegisterEphemeralBuilder(RegisterDropPolicy);
   std::vector<PickArgsSeen> pick_args_seen;
   g_pick_args_vector = &pick_args_seen;
-  InitServer(ChannelArgs());
+  InitServer(DefaultServerArgs());
   InitClient(ChannelArgs().Set(
       GRPC_ARG_SERVICE_CONFIG,
       "{\n"

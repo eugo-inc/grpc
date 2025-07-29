@@ -25,9 +25,9 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/lib/address_utils/parse_address.h"
 #include "src/core/lib/channel/channel_args.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/iomgr/port.h"
 #include "src/core/lib/iomgr/resolved_address.h"
 #include "src/core/resolver/endpoint_addresses.h"
@@ -86,7 +86,8 @@ bool ParseUri(const URI& uri,
       // Skip targets which are empty.
       continue;
     }
-    auto ith_uri = URI::Create(uri.scheme(), "", std::string(ith_path), {}, "");
+    auto ith_uri = URI::Create(uri.scheme(), /*user_info=*/"", /*host_port=*/"",
+                               std::string(ith_path), {}, "");
     grpc_resolved_address addr;
     if (!ith_uri.ok() || !parse(*ith_uri, &addr)) {
       errors_found = true;

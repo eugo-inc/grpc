@@ -15,10 +15,12 @@
 load(
     "//bazel:grpc_build_system.bzl",
     "grpc_cc_library",
+    "grpc_cc_proto_library",
     "grpc_cc_test",
+    "grpc_internal_proto_library",
     "grpc_package",
 )
-load("//test/core/test_util:grpc_fuzzer.bzl", "grpc_proto_fuzzer")
+load("//test/core/test_util:grpc_fuzzer.bzl", "grpc_fuzz_test")
 
 grpc_package(name = "test/core/xds")
 
@@ -30,7 +32,6 @@ grpc_cc_test(
     external_deps = [
         "gtest",
     ],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -38,6 +39,7 @@ grpc_cc_test(
         "//src/core:grpc_xds_client",
         "//src/core:xds_server_grpc",
         "//test/core/test_util:grpc_test_util",
+        "//test/core/test_util:scoped_env_var",
     ],
 )
 
@@ -48,7 +50,6 @@ grpc_cc_test(
         "absl/log:check",
         "gtest",
     ],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -62,21 +63,27 @@ grpc_cc_test(
     name = "file_watcher_certificate_provider_factory_test",
     srcs = ["file_watcher_certificate_provider_factory_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
         "//:gpr",
         "//:grpc",
         "//test/core/test_util:grpc_test_util",
+        "//test/core/test_util:scoped_env_var",
     ],
 )
 
 grpc_cc_test(
     name = "xds_certificate_provider_test",
     srcs = ["xds_certificate_provider_test.cc"],
-    external_deps = ["gtest"],
-    language = "C++",
+    data = [
+        "//test/core/credentials/transport/tls/test_data:spiffe/client_spiffebundle.json",
+        "//test/core/credentials/transport/tls/test_data:spiffe/test_bundles/spiffebundle2.json",
+    ],
+    external_deps = [
+        "gtest",
+        "absl/functional:overload",
+    ],
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -90,7 +97,6 @@ grpc_cc_test(
     name = "xds_lb_policy_registry_test",
     srcs = ["xds_lb_policy_registry_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -114,7 +120,6 @@ grpc_cc_test(
     name = "xds_audit_logger_registry_test",
     srcs = ["xds_audit_logger_registry_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -139,9 +144,7 @@ grpc_cc_library(
         "absl/log:check",
         "absl/log:log",
         "absl/strings",
-        "absl/types:optional",
     ],
-    language = "C++",
     deps = [
         "//:orphanable",
         "//:ref_counted_ptr",
@@ -157,7 +160,6 @@ grpc_cc_library(
     external_deps = [
         "absl/functional:function_ref",
     ],
-    language = "C++",
     deps = [
         "//:xds_client",
     ],
@@ -167,7 +169,6 @@ grpc_cc_test(
     name = "xds_client_test",
     srcs = ["xds_client_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = True,
     uses_polling = False,
     deps = [
@@ -182,23 +183,38 @@ grpc_cc_test(
         "//test/core/test_util:scoped_env_var",
         "@envoy_api//envoy/config/core/v3:pkg_cc_proto",
         "@envoy_api//envoy/service/discovery/v3:pkg_cc_proto",
+        "@envoy_api//envoy/service/status/v3:pkg_cc_proto",
     ],
 )
 
-grpc_proto_fuzzer(
-    name = "xds_client_fuzzer",
-    srcs = ["xds_client_fuzzer.cc"],
-    corpus = "xds_client_corpora",
-    external_deps = ["absl/log:log"],
-    language = "C++",
-    proto = "xds_client_fuzzer.proto",
-    proto_deps = [
+grpc_internal_proto_library(
+    name = "xds_client_fuzzer_proto",
+    srcs = [
+        "xds_client_fuzzer.proto",
+    ],
+    deps = [
         "//test/core/event_engine/fuzzing_event_engine:fuzzing_event_engine_proto",
         "@envoy_api//envoy/service/discovery/v3:pkg",
     ],
+)
+
+grpc_cc_proto_library(
+    name = "xds_client_fuzzer_cc_proto",
+    deps = [
+        "xds_client_fuzzer_proto",
+    ],
+)
+
+grpc_fuzz_test(
+    name = "xds_client_fuzzer",
+    srcs = ["xds_client_fuzzer.cc"],
+    external_deps = [
+        "absl/log:log",
+        "fuzztest",
+        "fuzztest_main",
+        "gtest",
+    ],
     tags = ["no_windows"],
-    uses_event_engine = True,
-    uses_polling = False,
     deps = [
         ":xds_client_test_peer",
         ":xds_transport_fake",
@@ -206,6 +222,7 @@ grpc_proto_fuzzer(
         "//test/core/test_util:grpc_test_util",
         "//test/core/event_engine/fuzzing_event_engine",
         "//test/core/event_engine:event_engine_test_utils",
+        "xds_client_fuzzer_cc_proto",
         # These proto deps are needed to ensure that we can read these
         # resource types out of the google.protobuf.Any fields in the
         # textproto files in the corpora.
@@ -215,6 +232,7 @@ grpc_proto_fuzzer(
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/filters/http/router/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/filters/network/http_connection_manager/v3:pkg_cc_proto",
+        "@envoy_api//envoy/service/discovery/v3:pkg_cc_proto",
     ],
 )
 
@@ -222,7 +240,6 @@ grpc_cc_test(
     name = "xds_common_types_test",
     srcs = ["xds_common_types_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -230,7 +247,6 @@ grpc_cc_test(
         "//:grpc",
         "//src/core:grpc_xds_client",
         "//test/core/test_util:grpc_test_util",
-        "//test/core/test_util:scoped_env_var",
         "//test/cpp/util:grpc_cli_utils",
         "@com_github_cncf_xds//udpa/type/v1:pkg_cc_proto",
         "@com_github_cncf_xds//xds/type/v3:pkg_cc_proto",
@@ -243,7 +259,6 @@ grpc_cc_test(
     name = "xds_metadata_test",
     srcs = ["xds_metadata_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -251,7 +266,6 @@ grpc_cc_test(
         "//:grpc",
         "//src/core:grpc_xds_client",
         "//test/core/test_util:grpc_test_util",
-        "//test/core/test_util:scoped_env_var",
         "@envoy_api//envoy/config/core/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/filters/http/gcp_authn/v3:pkg_cc_proto",
     ],
@@ -264,7 +278,6 @@ grpc_cc_test(
         "absl/log:check",
         "gtest",
     ],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -291,7 +304,6 @@ grpc_cc_test(
     name = "xds_listener_resource_type_test",
     srcs = ["xds_listener_resource_type_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -300,7 +312,6 @@ grpc_cc_test(
         "//:grpc++_codegen_proto",
         "//src/core:grpc_xds_client",
         "//test/core/test_util:grpc_test_util",
-        "//test/core/test_util:scoped_env_var",
         "//test/cpp/util:grpc_cli_utils",
         "@com_github_cncf_xds//xds/type/v3:pkg_cc_proto",
         "@envoy_api//envoy/config/listener/v3:pkg_cc_proto",
@@ -316,7 +327,6 @@ grpc_cc_test(
     name = "xds_route_config_resource_type_test",
     srcs = ["xds_route_config_resource_type_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -339,7 +349,6 @@ grpc_cc_test(
     name = "xds_cluster_resource_type_test",
     srcs = ["xds_cluster_resource_type_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [
@@ -366,7 +375,6 @@ grpc_cc_test(
     name = "xds_endpoint_resource_type_test",
     srcs = ["xds_endpoint_resource_type_test.cc"],
     external_deps = ["gtest"],
-    language = "C++",
     uses_event_engine = False,
     uses_polling = False,
     deps = [

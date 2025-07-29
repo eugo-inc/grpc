@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <chrono>
 #include <string>
 #include <thread>
@@ -25,8 +22,10 @@
 #include "envoy/config/cluster/v3/outlier_detection.pb.h"
 #include "envoy/extensions/filters/http/fault/v3/fault.pb.h"
 #include "envoy/extensions/filters/http/router/v3/router.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "src/core/client_channel/backup_poller.h"
-#include "src/core/lib/config/config_vars.h"
+#include "src/core/config/config_vars.h"
 #include "test/core/test_util/resolve_localhost_ip46.h"
 #include "test/cpp/end2end/xds/xds_end2end_test_lib.h"
 

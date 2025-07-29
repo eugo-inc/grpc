@@ -21,6 +21,7 @@
 #include <grpc/slice.h>
 #include <grpc/slice_buffer.h>
 #include <grpc/status.h>
+#include <grpc/support/alloc.h>
 #include <grpc/support/port_platform.h>
 #include <limits.h>
 #include <stdint.h>
@@ -45,6 +46,7 @@
 #include "src/core/ext/transport/chttp2/transport/chttp2_transport.h"
 #include "src/core/ext/transport/chttp2/transport/frame_goaway.h"
 #include "src/core/ext/transport/chttp2/transport/frame_ping.h"
+#include "src/core/ext/transport/chttp2/transport/internal_channel_arg_names.h"
 #include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/iomgr/closure.h"
 #include "src/core/lib/iomgr/endpoint.h"
@@ -53,6 +55,7 @@
 #include "src/core/lib/iomgr/exec_ctx.h"
 #include "src/core/lib/slice/slice.h"
 #include "src/core/lib/slice/slice_internal.h"
+#include "src/core/lib/slice/slice_string_helpers.h"
 #include "src/core/lib/surface/completion_queue.h"
 #include "src/core/server/server.h"
 #include "src/core/util/crash.h"
@@ -83,7 +86,9 @@ class GracefulShutdownTest : public ::testing::Test {
         grpc_channel_arg_integer_create(
             const_cast<char*>(GRPC_ARG_HTTP2_BDP_PROBE), 0),
         grpc_channel_arg_integer_create(
-            const_cast<char*>(GRPC_ARG_KEEPALIVE_TIME_MS), INT_MAX)};
+            const_cast<char*>(GRPC_ARG_KEEPALIVE_TIME_MS), INT_MAX),
+        grpc_channel_arg_integer_create(
+            const_cast<char*>(GRPC_ARG_PING_TIMEOUT_MS), 2000)};
     grpc_channel_args server_channel_args = {GPR_ARRAY_SIZE(server_args),
                                              server_args};
     // Create server
@@ -97,8 +102,8 @@ class GracefulShutdownTest : public ::testing::Test {
         false);
     grpc_endpoint_add_to_pollset(fds_.server, grpc_cq_pollset(cq_));
     CHECK(core_server->SetupTransport(transport, nullptr,
-                                      core_server->channel_args(),
-                                      nullptr) == absl::OkStatus());
+                                      core_server->channel_args()) ==
+          absl::OkStatus());
     grpc_chttp2_transport_start_reading(transport, nullptr, nullptr, nullptr,
                                         nullptr);
     // Start polling on the client
@@ -165,6 +170,10 @@ class GracefulShutdownTest : public ::testing::Test {
       {
         MutexLock lock(&self->mu_);
         for (size_t i = 0; i < self->read_buffer_.count; ++i) {
+          char* dump = grpc_dump_slice(self->read_buffer_.slices[i],
+                                       GPR_DUMP_HEX | GPR_DUMP_ASCII);
+          LOG(INFO) << "Read: " << dump;
+          gpr_free(dump);
           absl::StrAppend(&self->read_bytes_,
                           StringViewFromSlice(self->read_buffer_.slices[i]));
         }
@@ -200,7 +209,8 @@ class GracefulShutdownTest : public ::testing::Test {
         read_bytes_ = read_bytes_.substr(where + bytes.size());
         break;
       }
-      ASSERT_LT(absl::Now() - start_time, absl::Seconds(60));
+      ASSERT_LT(absl::Now() - start_time, absl::Seconds(60))
+          << "Timeout reading bytes";
       read_cv_.WaitWithTimeout(&mu_, absl::Seconds(5));
     }
   }
@@ -222,11 +232,12 @@ class GracefulShutdownTest : public ::testing::Test {
         absl::Minutes(1)));
   }
 
-  void WaitForGoaway(uint32_t last_stream_id, uint32_t error_code = 0,
-                     grpc_slice slice = grpc_empty_slice()) {
+  void WaitForGoaway(uint32_t last_stream_id, uint32_t error_code,
+                     grpc_slice message) {
     grpc_slice_buffer buffer;
     grpc_slice_buffer_init(&buffer);
-    grpc_chttp2_goaway_append(last_stream_id, error_code, slice, &buffer);
+    grpc_chttp2_goaway_append(last_stream_id, error_code, message, &buffer,
+                              &http2_ztrace_collector_);
     std::string expected_bytes;
     for (size_t i = 0; i < buffer.count; ++i) {
       absl::StrAppend(&expected_bytes, StringViewFromSlice(buffer.slices[i]));
@@ -274,8 +285,9 @@ class GracefulShutdownTest : public ::testing::Test {
     Notification on_write_done_notification_;
     GRPC_CLOSURE_INIT(&on_write_done_, OnWriteDone,
                       &on_write_done_notification_, nullptr);
-    grpc_endpoint_write(fds_.client, buffer, &on_write_done_, nullptr,
-                        /*max_frame_size=*/INT_MAX);
+    grpc_endpoint_write(
+        fds_.client, buffer, &on_write_done_,
+        grpc_event_engine::experimental::EventEngine::Endpoint::WriteArgs());
     ExecCtx::Get()->Flush();
     CHECK(on_write_done_notification_.WaitForNotificationWithTimeout(
         absl::Seconds(5)));
@@ -306,19 +318,24 @@ class GracefulShutdownTest : public ::testing::Test {
   grpc_slice_buffer read_buffer_;
   std::string read_bytes_ ABSL_GUARDED_BY(mu_);
   grpc_closure on_write_done_;
+  Http2ZTraceCollector http2_ztrace_collector_;
 };
 
 TEST_F(GracefulShutdownTest, GracefulGoaway) {
   // Initiate shutdown on the server
   grpc_server_shutdown_and_notify(server_, cq_, Tag(1));
   // Wait for first goaway
-  WaitForGoaway((1u << 31) - 1);
+  WaitForGoaway((1u << 31) - 1, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
   // Wait for the ping
   uint64_t ping_id = WaitForPing();
   // Reply to the ping
   SendPingAck(ping_id);
   // Wait for final goaway
-  WaitForGoaway(0);
+  WaitForGoaway(0, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
   // The shutdown should successfully complete.
   cqv_->Expect(Tag(1), true);
   cqv_->Verify();
@@ -337,7 +354,9 @@ TEST_F(GracefulShutdownTest, RequestStartedBeforeFinalGoaway) {
   // Initiate shutdown on the server
   grpc_server_shutdown_and_notify(server_, cq_, Tag(1));
   // Wait for first goaway
-  WaitForGoaway((1u << 31) - 1);
+  WaitForGoaway((1u << 31) - 1, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
   // Wait for the ping
   uint64_t ping_id = WaitForPing();
   // Start a request
@@ -358,7 +377,9 @@ TEST_F(GracefulShutdownTest, RequestStartedBeforeFinalGoaway) {
   SendPingAck(ping_id);
   // Wait for final goaway with last stream ID 1 to show that the HTTP2
   // transport accepted the stream.
-  WaitForGoaway(1);
+  WaitForGoaway(1, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
   // TODO(yashykt): The surface layer automatically cancels calls received after
   // shutdown has been called. Once that is fixed, this should be a success.
   cqv_->Expect(Tag(100), false);
@@ -401,13 +422,17 @@ TEST_F(GracefulShutdownTest, RequestStartedAfterFinalGoawayIsIgnored) {
   // Initiate shutdown on the server
   grpc_server_shutdown_and_notify(server_, cq_, Tag(1));
   // Wait for first goaway
-  WaitForGoaway((1u << 31) - 1);
+  WaitForGoaway((1u << 31) - 1, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
   // Wait for the ping
   uint64_t ping_id = WaitForPing();
   // Reply to the ping
   SendPingAck(ping_id);
   // Wait for final goaway
-  WaitForGoaway(1);
+  WaitForGoaway(1, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
 
   // Send another request from the client which should be ignored.
   constexpr char kNewRequestFrame[] =
@@ -467,13 +492,15 @@ TEST_F(GracefulShutdownTest, UnresponsiveClient) {
   // Initiate shutdown on the server
   grpc_server_shutdown_and_notify(server_, cq_, Tag(1));
   // Wait for first goaway
-  WaitForGoaway((1u << 31) - 1);
+  WaitForGoaway((1u << 31) - 1, /*error_code=*/0,
+                /*message=*/
+                Slice::FromStaticString("Server shutdown").TakeCSlice());
   // Wait for the ping
   std::ignore = WaitForPing();
   // Wait for final goaway without sending a ping ACK.
   WaitForClose();
   EXPECT_GE(absl::Now() - initial_time,
-            absl::Seconds(20) -
+            absl::Seconds(2) -
                 absl::Seconds(
                     1) /* clock skew between threads due to time caching */);
   // The shutdown should successfully complete.

@@ -46,8 +46,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "src/core/config/core_configuration.h"
 #include "src/core/lib/channel/channel_args_preconditioning.h"
-#include "src/core/lib/config/core_configuration.h"
 #include "src/core/lib/event_engine/channel_args_endpoint_config.h"
 #include "src/core/lib/event_engine/default_event_engine.h"
 #include "src/core/lib/event_engine/tcp_socket_utils.h"
@@ -56,7 +56,7 @@
 #include "src/core/util/notification.h"
 
 extern absl::AnyInvocable<
-    std::unique_ptr<grpc_event_engine::experimental::EventEngine>(void)>
+    std::shared_ptr<grpc_event_engine::experimental::EventEngine>(void)>
 CustomEventEngineFactory();
 
 ABSL_FLAG(std::string, target, "ipv4:127.0.0.1:50051", "Target string");
@@ -81,7 +81,7 @@ void SendMessage(EventEngine::Endpoint* endpoint, int message_id) {
         CHECK_OK(status);
         write_done.Notify();
       },
-      &buf, nullptr);
+      &buf, EventEngine::Endpoint::WriteArgs());
   write_done.WaitForNotification();
 }
 
@@ -99,7 +99,7 @@ void ReceiveAndEchoMessage(EventEngine::Endpoint* endpoint, int message_id) {
                    << received.as_string_view();
         read_done.Notify();
       },
-      &buf, nullptr);
+      &buf, EventEngine::Endpoint::ReadArgs());
   read_done.WaitForNotification();
 }
 
@@ -107,7 +107,8 @@ void RunUntilInterrupted() {
   auto engine = GetDefaultEventEngine();
   std::unique_ptr<EventEngine::Endpoint> endpoint;
   grpc_core::Notification connected;
-  auto memory_quota = std::make_unique<grpc_core::MemoryQuota>("bar");
+  auto memory_quota = std::make_unique<grpc_core::MemoryQuota>(
+      grpc_core::MakeRefCounted<grpc_core::channelz::ResourceQuotaNode>("bar"));
   ChannelArgsEndpointConfig config{grpc_core::CoreConfiguration::Get()
                                        .channel_args_preconditioning()
                                        .PreconditionChannelArgs(nullptr)};
