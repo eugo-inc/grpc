@@ -15,8 +15,8 @@
 import errno
 import os
 import os.path
-import platform
 import pathlib
+import platform
 import re
 import shlex
 import shutil
@@ -76,12 +76,16 @@ BUILD_WITH_CYTHON = _env_bool_value("GRPC_PYTHON_BUILD_WITH_CYTHON", "False")
 # Export this variable to use the system installation of abseil. You need to
 # have the header files installed (in /usr/include/absl) and during
 # runtime, the shared library must be installed
-BUILD_WITH_SYSTEM_ABSL = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_ABSL", "False")
+BUILD_WITH_SYSTEM_ABSL = _env_bool_value(
+    "GRPC_PYTHON_BUILD_SYSTEM_ABSL", "False"
+)
 
 # Export this variable to use the system installation of protobuf. You need to
 # have the header files installed (in /usr/include/grpc) and during
 # runtime, the shared libraries libprotoc must be installed
-BUILD_WITH_SYSTEM_PROTOBUF = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_PROTOBUF", "False")
+BUILD_WITH_SYSTEM_PROTOBUF = _env_bool_value(
+    "GRPC_PYTHON_BUILD_SYSTEM_PROTOBUF", "False"
+)
 if BUILD_WITH_SYSTEM_PROTOBUF:
     # Implies building with other system libraries as well
     BUILD_WITH_SYSTEM_CARES = True
@@ -284,7 +288,9 @@ EXTENSION_LIBRARIES = ()
 
 if BUILD_WITH_SYSTEM_ABSL:
     CC_FILES = filter(lambda x: "third_party/abseil-cpp" not in x, CC_FILES)
-    CC_INCLUDES = filter(lambda x: "third_party/abseil-cpp" not in x, CC_INCLUDES)
+    CC_INCLUDES = filter(
+        lambda x: "third_party/abseil-cpp" not in x, CC_INCLUDES
+    )
     EXTENSION_LIBRARIES += tuple(
         lib.stem[3:]
         for lib in sorted(pathlib.Path("/usr").glob("lib*/libabsl_*.so"))
@@ -294,13 +300,16 @@ if BUILD_WITH_SYSTEM_PROTOBUF:
     CC_FILES = filter(lambda x: "third_party/protobuf" not in x, CC_FILES)
     CC_INCLUDES = filter(lambda x: "third_party/protobuf" not in x, CC_INCLUDES)
     EXTENSION_LIBRARIES += ("protoc",)
-    PROTO_INCLUDE = "/usr/local/include/" # @TODO+:Eugo:improve(this to be extracted automatically)
+    PROTO_INCLUDE = "/usr/local/include/"  # @TODO+:Eugo:improve(this to be extracted automatically)
     for source, destination in [
-      ("include", "grpc_root/include"), ("src/compiler", "grpc_root/src/compiler")
+        ("include", "grpc_root/include"),
+        ("src/compiler", "grpc_root/src/compiler"),
     ]:
-      source_directory = f"../../../../{source}"
-      destination_directory = f"./{destination}"
-      shutil.copytree(source_directory, destination_directory, dirs_exist_ok=True)
+        source_directory = f"../../../../{source}"
+        destination_directory = f"./{destination}"
+        shutil.copytree(
+            source_directory, destination_directory, dirs_exist_ok=True
+        )
 
 
 def package_data():
