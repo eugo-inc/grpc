@@ -45,9 +45,7 @@ egg_info.manifest_maker.template = "PYTHON-MANIFEST.in"
 
 PY3 = sys.version_info.major == 3
 PYTHON_STEM = os.path.join("src", "python", "grpcio")
-CORE_INCLUDE = (
-    ".",
-)
+CORE_INCLUDE = (".",)
 GRPC_INCLUDE = ("include",)
 ABSL_INCLUDE = (os.path.join("third_party", "abseil-cpp"),)
 ADDRESS_SORTING_INCLUDE = (
@@ -169,12 +167,16 @@ BUILD_WITH_SYSTEM_RE2 = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_RE2", "False")
 # Export this variable to use the system installation of abseil. You need to
 # have the header files installed (in /usr/include/absl) and during
 # runtime, the shared library must be installed
-BUILD_WITH_SYSTEM_ABSL = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_ABSL", "False")
+BUILD_WITH_SYSTEM_ABSL = _env_bool_value(
+    "GRPC_PYTHON_BUILD_SYSTEM_ABSL", "False"
+)
 
 # Export this variable to use the system installation of grpc. You need to
 # have the header files installed (in /usr/include/grpc) and during
 # runtime, the shared libraries libgrpc and libgpr must be installed
-BUILD_WITH_SYSTEM_GRPC = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_GRPC", "False")
+BUILD_WITH_SYSTEM_GRPC = _env_bool_value(
+    "GRPC_PYTHON_BUILD_SYSTEM_GRPC", "False"
+)
 if BUILD_WITH_SYSTEM_GRPC:
     # Implies building with other system libraries as well
     BUILD_WITH_SYSTEM_OPENSSL = True
@@ -353,12 +355,8 @@ if BUILD_WITH_SYSTEM_ABSL:
     ABSL_INCLUDE = (os.path.join("/usr", "include"),)
 
 if BUILD_WITH_SYSTEM_GRPC:
-    CORE_C_FILES = filter(
-        lambda x: "src/core" not in x, CORE_C_FILES
-    )
-    CORE_C_FILES = filter(
-        lambda x: "third_party/upb" not in x, CORE_C_FILES
-    )
+    CORE_C_FILES = filter(lambda x: "src/core" not in x, CORE_C_FILES)
+    CORE_C_FILES = filter(lambda x: "third_party/upb" not in x, CORE_C_FILES)
     GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
     UPB_INCLUDE = ()
     UPB_GRPC_GENERATED_INCLUDE = ()
@@ -412,7 +410,7 @@ if BUILD_WITH_SYSTEM_ABSL:
         for lib in sorted(pathlib.Path("/usr").glob("lib*/libabsl_*.so"))
     )
 if BUILD_WITH_SYSTEM_GRPC:
-    EXTENSION_LIBRARIES += ("grpc",)  
+    EXTENSION_LIBRARIES += ("grpc",)
     EXTENSION_LIBRARIES += ("gpr",)
 
 DEFINE_MACROS = (("_WIN32_WINNT", 0x600),)
