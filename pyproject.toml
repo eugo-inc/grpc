@@ -1,0 +1,13 @@
+[build-system]
+build-backend = 'mesonpy'
+requires = ['meson-python']
+
+[project]
+name = 'grpcio'
+readme = 'README.md'
+requires-python = '>=3.12'
+
+# Must match `./meson.build#project#version` and `./grpc/src/python/grpcio/grpc_version.py`.
+#
+# The latter is managed by `grpc` mainteners, so it should be treated as a single source of truth for the package version.
+version = '1.75.0.dev0'

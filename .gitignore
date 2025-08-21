@@ -5,6 +5,7 @@ bins
 gens
 libs
 objs
+eugo_build/
 
 # Python items
 .coverage*

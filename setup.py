@@ -28,13 +28,12 @@ import os
 import os.path
 import pathlib
 import platform
-import re
 import shlex
 import shutil
 import subprocess
-from subprocess import PIPE
 import sys
 import sysconfig
+from subprocess import PIPE
 
 import _metadata
 from setuptools import Extension
@@ -45,14 +44,10 @@ egg_info.manifest_maker.template = "PYTHON-MANIFEST.in"
 
 PY3 = sys.version_info.major == 3
 PYTHON_STEM = os.path.join("src", "python", "grpcio")
-CORE_INCLUDE = (
-    ".",
-)
+CORE_INCLUDE = (".",)
 GRPC_INCLUDE = ("include",)
 ABSL_INCLUDE = (os.path.join("third_party", "abseil-cpp"),)
-ADDRESS_SORTING_INCLUDE = (
-    os.path.join("third_party", "address_sorting", "include"),
-)
+ADDRESS_SORTING_INCLUDE = (os.path.join("third_party", "address_sorting", "include"),)
 CARES_INCLUDE = (
     os.path.join("third_party", "cares", "cares", "include"),
     os.path.join("third_party", "cares"),
@@ -69,14 +64,10 @@ if "linux" in sys.platform:
 if "openbsd" in sys.platform:
     CARES_INCLUDE += (os.path.join("third_party", "cares", "config_openbsd"),)
 RE2_INCLUDE = (os.path.join("third_party", "re2"),)
-SSL_INCLUDE = (
-    os.path.join("third_party", "boringssl-with-bazel", "src", "include"),
-)
+SSL_INCLUDE = (os.path.join("third_party", "boringssl-with-bazel", "src", "include"),)
 UPB_INCLUDE = (os.path.join("third_party", "upb"),)
 UPB_GRPC_GENERATED_INCLUDE = (os.path.join("src", "core", "ext", "upb-gen"),)
-UPBDEFS_GRPC_GENERATED_INCLUDE = (
-    os.path.join("src", "core", "ext", "upbdefs-gen"),
-)
+UPBDEFS_GRPC_GENERATED_INCLUDE = (os.path.join("src", "core", "ext", "upbdefs-gen"),)
 UTF8_RANGE_INCLUDE = (os.path.join("third_party", "utf8_range"),)
 XXHASH_INCLUDE = (os.path.join("third_party", "xxhash"),)
 ZLIB_INCLUDE = (os.path.join("third_party", "zlib"),)
@@ -89,11 +80,10 @@ sys.path.insert(0, os.path.abspath(PYTHON_STEM))
 # Break import-style to ensure we can actually find our in-repo dependencies.
 import _parallel_compile_patch
 import _spawn_patch
-import grpc_core_dependencies
-import python_version
-
 import commands
+import grpc_core_dependencies
 import grpc_version
+import python_version
 
 _parallel_compile_patch.monkeypatch_compile_maybe()
 _spawn_patch.monkeypatch_spawn()
@@ -107,10 +97,7 @@ CLASSIFIERS = (
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
     ]
-    + [
-        f"Programming Language :: Python :: {x}"
-        for x in python_version.SUPPORTED_PYTHON_VERSIONS
-    ]
+    + [f"Programming Language :: Python :: {x}" for x in python_version.SUPPORTED_PYTHON_VERSIONS]
     + ["License :: OSI Approved :: Apache Software License"]
 )
 
@@ -120,18 +107,14 @@ def _env_bool_value(env_name, default):
     return os.environ.get(env_name, default).upper() not in ["FALSE", "0", ""]
 
 
-BUILD_WITH_BORING_SSL_ASM = _env_bool_value(
-    "GRPC_BUILD_WITH_BORING_SSL_ASM", "True"
-)
+BUILD_WITH_BORING_SSL_ASM = _env_bool_value("GRPC_BUILD_WITH_BORING_SSL_ASM", "True")
 
 # Export this environment variable to override the platform variant that will
 # be chosen for boringssl assembly optimizations. This option is useful when
 # crosscompiling and the host platform as obtained by sysconfig.get_platform()
 # doesn't match the platform we are targeting.
 # Example value: "linux-aarch64"
-BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM = os.environ.get(
-    "GRPC_BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM", ""
-)
+BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM = os.environ.get("GRPC_BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM", "")
 
 # Environment variable to determine whether or not the Cython extension should
 # *use* Cython or use the generated C files. Note that this requires the C files
@@ -143,23 +126,17 @@ BUILD_WITH_CYTHON = _env_bool_value("GRPC_PYTHON_BUILD_WITH_CYTHON", "False")
 # Export this variable to use the system installation of openssl. You need to
 # have the header files installed (in /usr/include/openssl) and during
 # runtime, the shared library must be installed
-BUILD_WITH_SYSTEM_OPENSSL = _env_bool_value(
-    "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL", "False"
-)
+BUILD_WITH_SYSTEM_OPENSSL = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_OPENSSL", "False")
 
 # Export this variable to use the system installation of zlib. You need to
 # have the header files installed (in /usr/include/) and during
 # runtime, the shared library must be installed
-BUILD_WITH_SYSTEM_ZLIB = _env_bool_value(
-    "GRPC_PYTHON_BUILD_SYSTEM_ZLIB", "False"
-)
+BUILD_WITH_SYSTEM_ZLIB = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_ZLIB", "False")
 
 # Export this variable to use the system installation of cares. You need to
 # have the header files installed (in /usr/include/) and during
 # runtime, the shared library must be installed
-BUILD_WITH_SYSTEM_CARES = _env_bool_value(
-    "GRPC_PYTHON_BUILD_SYSTEM_CARES", "False"
-)
+BUILD_WITH_SYSTEM_CARES = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_CARES", "False")
 
 # Export this variable to use the system installation of re2. You need to
 # have the header files installed (in /usr/include/re2) and during
@@ -190,9 +167,7 @@ if BUILD_WITH_SYSTEM_GRPC:
 # it's difficult to ensure that the crosscompilation toolchain has a high-enough version
 # of GCC (we require >=5.1) but still uses old-enough libstdc++ symbols.
 # TODO(jtattermusch): remove this workaround once issues with crosscompiler version are resolved.
-BUILD_WITH_STATIC_LIBSTDCXX = _env_bool_value(
-    "GRPC_PYTHON_BUILD_WITH_STATIC_LIBSTDCXX", "False"
-)
+BUILD_WITH_STATIC_LIBSTDCXX = _env_bool_value("GRPC_PYTHON_BUILD_WITH_STATIC_LIBSTDCXX", "False")
 
 # For local development use only: This skips building gRPC Core and its
 # dependencies, including protobuf and boringssl. This allows "incremental"
@@ -205,29 +180,20 @@ BUILD_WITH_STATIC_LIBSTDCXX = _env_bool_value(
 #    make HAS_SYSTEM_OPENSSL_ALPN=0
 #
 # TODO(ericgribkoff) Respect the BUILD_WITH_SYSTEM_* flags alongside this option
-USE_PREBUILT_GRPC_CORE = _env_bool_value(
-    "GRPC_PYTHON_USE_PREBUILT_GRPC_CORE", "False"
-)
+USE_PREBUILT_GRPC_CORE = _env_bool_value("GRPC_PYTHON_USE_PREBUILT_GRPC_CORE", "False")
 
 # Environment variable to determine whether or not to enable coverage analysis
 # in Cython modules.
-ENABLE_CYTHON_TRACING = _env_bool_value(
-    "GRPC_PYTHON_ENABLE_CYTHON_TRACING", "False"
-)
+ENABLE_CYTHON_TRACING = _env_bool_value("GRPC_PYTHON_ENABLE_CYTHON_TRACING", "False")
 
 # Environment variable specifying whether or not there's interest in setting up
 # documentation building.
-ENABLE_DOCUMENTATION_BUILD = _env_bool_value(
-    "GRPC_PYTHON_ENABLE_DOCUMENTATION_BUILD", "False"
-)
+ENABLE_DOCUMENTATION_BUILD = _env_bool_value("GRPC_PYTHON_ENABLE_DOCUMENTATION_BUILD", "False")
 
 
 def check_linker_need_libatomic():
     """Test if linker on system needs libatomic."""
-    code_test = (
-        b"#include <atomic>\n"
-        + b"int main() { return std::atomic<int64_t>{}; }"
-    )
+    code_test = b"#include <atomic>\n" + b"int main() { return std::atomic<int64_t>{}; }"
     cxx = shlex.split(os.environ.get("CXX", "c++"))
     cpp_test = subprocess.Popen(
         cxx + ["-x", "c++", "-std=c++17", "-"],
@@ -286,16 +252,11 @@ if EXTRA_ENV_COMPILE_ARGS is None:
     elif "linux" in sys.platform:
         # GCC by defaults uses C17 so only C++17 needs to be specified.
         EXTRA_ENV_COMPILE_ARGS += " -std=c++17"
-        EXTRA_ENV_COMPILE_ARGS += (
-            " -fvisibility=hidden -fno-wrapv -fno-exceptions"
-        )
+        EXTRA_ENV_COMPILE_ARGS += " -fvisibility=hidden -fno-wrapv -fno-exceptions"
     elif "darwin" in sys.platform:
         # AppleClang by defaults uses C17 so only C++17 needs to be specified.
         EXTRA_ENV_COMPILE_ARGS += " -std=c++17"
-        EXTRA_ENV_COMPILE_ARGS += (
-            " -stdlib=libc++ -fvisibility=hidden -fno-wrapv -fno-exceptions"
-            " -DHAVE_UNISTD_H"
-        )
+        EXTRA_ENV_COMPILE_ARGS += " -stdlib=libc++ -fvisibility=hidden -fno-wrapv -fno-exceptions -DHAVE_UNISTD_H"
 
 if EXTRA_ENV_LINK_ARGS is None:
     EXTRA_ENV_LINK_ARGS = ""
@@ -328,38 +289,35 @@ if "win32" in sys.platform:
     CORE_C_FILES = filter(lambda x: "third_party/cares" not in x, CORE_C_FILES)
 
 if BUILD_WITH_SYSTEM_OPENSSL:
-    CORE_C_FILES = filter(
-        lambda x: "third_party/boringssl" not in x, CORE_C_FILES
-    )
+    CORE_C_FILES = filter(lambda x: "third_party/boringssl" not in x, CORE_C_FILES)
     CORE_C_FILES = filter(lambda x: "src/boringssl" not in x, CORE_C_FILES)
-    SSL_INCLUDE = (os.path.join("/usr", "include", "openssl"),)
+    SSL_INCLUDE = (os.path.join("/usr", "local", "include", "openssl"),)
 
 if BUILD_WITH_SYSTEM_ZLIB:
     CORE_C_FILES = filter(lambda x: "third_party/zlib" not in x, CORE_C_FILES)
-    ZLIB_INCLUDE = (os.path.join("/usr", "include"),)
+    ZLIB_INCLUDE = (os.path.join("/usr", "local", "include"),)
 
 if BUILD_WITH_SYSTEM_CARES:
     CORE_C_FILES = filter(lambda x: "third_party/cares" not in x, CORE_C_FILES)
-    CARES_INCLUDE = (os.path.join("/usr", "include"),)
+    CARES_INCLUDE = (os.path.join("/usr", "local", "include"),)
 
 if BUILD_WITH_SYSTEM_RE2:
     CORE_C_FILES = filter(lambda x: "third_party/re2" not in x, CORE_C_FILES)
-    RE2_INCLUDE = (os.path.join("/usr", "include", "re2"),)
+    RE2_INCLUDE = (os.path.join("/usr", "local", "include", "re2"),)
 
 if BUILD_WITH_SYSTEM_ABSL:
-    CORE_C_FILES = filter(
-        lambda x: "third_party/abseil-cpp" not in x, CORE_C_FILES
-    )
-    ABSL_INCLUDE = (os.path.join("/usr", "include"),)
+    CORE_C_FILES = filter(lambda x: "third_party/abseil-cpp" not in x, CORE_C_FILES)
+    ABSL_INCLUDE = (os.path.join("/usr", "local", "include"),)
 
 if BUILD_WITH_SYSTEM_GRPC:
-    CORE_C_FILES = filter(
-        lambda x: "src/core" not in x, CORE_C_FILES
-    )
-    CORE_C_FILES = filter(
-        lambda x: "third_party/upb" not in x, CORE_C_FILES
-    )
-    GRPC_INCLUDE = (os.path.join("/usr", "include", "grpc"),)
+    CORE_C_FILES = filter(lambda x: "src/core" not in x, CORE_C_FILES)
+    # @EUGO_CHANGE: These are used by libgrpc and friends itself and not the Python extension. To avoid duplicating symbols, we exclude them from building.
+    # @EUGO_CHANGE: opentelemetry_cpp::api is not used by python portion of grpc! Which is cool
+    CORE_C_FILES = filter(lambda x: "third_party/upb" not in x, CORE_C_FILES)
+    CORE_C_FILES = filter(lambda x: "third_party/address_sorting" not in x, CORE_C_FILES)
+    CORE_C_FILES = filter(lambda x: "third_party/utf8_range" not in x, CORE_C_FILES)
+
+    GRPC_INCLUDE = (os.path.join("/usr", "local", "include", "grpc"),)
     UPB_INCLUDE = ()
     UPB_GRPC_GENERATED_INCLUDE = ()
     UPBDEFS_GRPC_GENERATED_INCLUDE = ()
@@ -386,7 +344,7 @@ EXTENSION_INCLUDE_DIRECTORIES = (
 EXTENSION_LIBRARIES = ()
 if "linux" in sys.platform:
     EXTENSION_LIBRARIES += ("rt",)
-if not "win32" in sys.platform:
+if "win32" not in sys.platform:
     EXTENSION_LIBRARIES += ("m",)
 if "win32" in sys.platform:
     EXTENSION_LIBRARIES += (
@@ -407,12 +365,9 @@ if BUILD_WITH_SYSTEM_CARES:
 if BUILD_WITH_SYSTEM_RE2:
     EXTENSION_LIBRARIES += ("re2",)
 if BUILD_WITH_SYSTEM_ABSL:
-    EXTENSION_LIBRARIES += tuple(
-        lib.stem[3:]
-        for lib in sorted(pathlib.Path("/usr").glob("lib*/libabsl_*.so"))
-    )
+    EXTENSION_LIBRARIES += tuple(lib.stem[3:] for lib in sorted(pathlib.Path("/usr/local").glob("lib*/libabsl_*.so")))
 if BUILD_WITH_SYSTEM_GRPC:
-    EXTENSION_LIBRARIES += ("grpc",)  
+    EXTENSION_LIBRARIES += ("grpc",)
     EXTENSION_LIBRARIES += ("gpr",)
 
 DEFINE_MACROS = (("_WIN32_WINNT", 0x600),)
@@ -424,8 +379,8 @@ asm_files = []
 # the binary.
 def _quote_build_define(argument):
     if "win32" in sys.platform:
-        return '"\\"{}\\""'.format(argument)
-    return '"{}"'.format(argument)
+        return f'"\\"{argument}\\""'
+    return f'"{argument}"'
 
 
 DEFINE_MACROS += (
@@ -439,9 +394,7 @@ DEFINE_MACROS += (
 asm_key = ""
 if BUILD_WITH_BORING_SSL_ASM and not BUILD_WITH_SYSTEM_OPENSSL:
     boringssl_asm_platform = (
-        BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM
-        if BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM
-        else sysconfig.get_platform()
+        BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM if BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM else sysconfig.get_platform()
     )
     if "i686" in boringssl_asm_platform:
         print("Enabling SSE2 on %s platform" % boringssl_asm_platform)
@@ -483,12 +436,12 @@ if "win32" in sys.platform:
 else:
     DEFINE_MACROS += (
         ("HAVE_CONFIG_H", 1),
-        ("GRPC_ENABLE_FORK_SUPPORT", 1),
+        ("GRPC_ENABLE_FORK_SUPPORT", 1),  # @HELP(now)
     )
 
 # Fix for multiprocessing support on Apple devices.
 # TODO(vigneshbabu): Remove this once the poll poller gets fork support.
-DEFINE_MACROS += (("GRPC_DO_NOT_INSTANTIATE_POSIX_POLLER", 1),)
+DEFINE_MACROS += (("GRPC_DO_NOT_INSTANTIATE_POSIX_POLLER", 1),)  # @HELP(now)
 
 # Fix for Cython build issue in aarch64.
 # It's required to define this macro before include <inttypes.h>.
@@ -497,23 +450,20 @@ DEFINE_MACROS += (("GRPC_DO_NOT_INSTANTIATE_POSIX_POLLER", 1),)
 # but we're still having issue in aarch64, so we manually define the macro here.
 # TODO(xuanwn): Figure out what's going on in the aarch64 build so we can support
 # gcc + Bazel.
-DEFINE_MACROS += (("__STDC_FORMAT_MACROS", None),)
+DEFINE_MACROS += (("__STDC_FORMAT_MACROS", None),)  # @HELP(now)
 
 LDFLAGS = tuple(EXTRA_LINK_ARGS)
 CFLAGS = tuple(EXTRA_COMPILE_ARGS)
 if "linux" in sys.platform or "darwin" in sys.platform:
     pymodinit_type = "PyObject*" if PY3 else "void"
-    pymodinit = 'extern "C" __attribute__((visibility ("default"))) {}'.format(
-        pymodinit_type
-    )
+    pymodinit = f'extern "C" __attribute__((visibility ("default"))) {pymodinit_type}'
     DEFINE_MACROS += (("PyMODINIT_FUNC", pymodinit),)
     DEFINE_MACROS += (("GRPC_POSIX_FORK_ALLOW_PTHREAD_ATFORK", 1),)
 
 
 def cython_extensions_and_necessity():
     cython_module_files = [
-        os.path.join(PYTHON_STEM, name.replace(".", "/") + ".pyx")
-        for name in CYTHON_EXTENSION_MODULE_NAMES
+        os.path.join(PYTHON_STEM, name.replace(".", "/") + ".pyx") for name in CYTHON_EXTENSION_MODULE_NAMES
     ]
     config = os.environ.get("CONFIG", "opt")
     prefix = "libs/" + config + "/"
@@ -528,15 +478,31 @@ def cython_extensions_and_necessity():
     else:
         core_c_files = list(CORE_C_FILES)
         extra_objects = []
+
+    # @EUGO_CHANGE: @begin:
+    # The output of first 3 collections should always be empty in Eugo Environment.
+    # The last one as of now only has `cygrpc.pyx`.
+    # from pprint import pprint
+
+    # pprint("core_c_files:")
+    # pprint(core_c_files)
+
+    # pprint("asm_files:")
+    # pprint(asm_files)
+
+    # pprint("list(CYTHON_HELPER_C_FILES)")
+    # pprint(list(CYTHON_HELPER_C_FILES))
+
+    # pprint("zip(list(CYTHON_EXTENSION_MODULE_NAMES), cython_module_files):")
+    # pprint(dict(zip(list(CYTHON_EXTENSION_MODULE_NAMES), cython_module_files)))
+
+    # raise ValueError("[EUGO]: Exit early")
+    # @EUGO_CHANGE: @end
+
     extensions = [
         Extension(
             name=module_name,
-            sources=(
-                [module_file]
-                + list(CYTHON_HELPER_C_FILES)
-                + core_c_files
-                + asm_files
-            ),
+            sources=([module_file] + list(CYTHON_HELPER_C_FILES) + core_c_files + asm_files),
             include_dirs=list(EXTENSION_INCLUDE_DIRECTORIES),
             libraries=list(EXTENSION_LIBRARIES),
             define_macros=list(DEFINE_MACROS),
@@ -544,16 +510,11 @@ def cython_extensions_and_necessity():
             extra_compile_args=list(CFLAGS),
             extra_link_args=list(LDFLAGS),
         )
-        for (module_name, module_file) in zip(
-            list(CYTHON_EXTENSION_MODULE_NAMES), cython_module_files
-        )
+        for (module_name, module_file) in zip(list(CYTHON_EXTENSION_MODULE_NAMES), cython_module_files)
     ]
     need_cython = BUILD_WITH_CYTHON
     if not BUILD_WITH_CYTHON:
-        need_cython = (
-            need_cython
-            or not commands.check_and_update_cythonization(extensions)
-        )
+        need_cython = need_cython or not commands.check_and_update_cythonization(extensions)
     # TODO: the strategy for conditional compiling and exposing the aio Cython
     # dependencies will be revisited by https://github.com/grpc/grpc/issues/19728
     return (
@@ -575,12 +536,10 @@ PACKAGE_DIRECTORIES = {
 INSTALL_REQUIRES = ("typing-extensions~=4.12",)
 
 EXTRAS_REQUIRES = {
-    "protobuf": "grpcio-tools>={version}".format(version=grpc_version.VERSION),
+    "protobuf": f"grpcio-tools>={grpc_version.VERSION}",
 }
 
-SETUP_REQUIRES = (
-    INSTALL_REQUIRES + ("Sphinx~=1.8.1",) if ENABLE_DOCUMENTATION_BUILD else ()
-)
+SETUP_REQUIRES = INSTALL_REQUIRES + ("Sphinx~=1.8.1",) if ENABLE_DOCUMENTATION_BUILD else ()
 
 try:
     import Cython
@@ -592,9 +551,7 @@ except ImportError:
             "other commands, but the extension files will fail to build.\n"
         )
     elif need_cython:
-        sys.stderr.write(
-            "We could not find Cython. Setup may take 10-20 minutes.\n"
-        )
+        sys.stderr.write("We could not find Cython. Setup may take 10-20 minutes.\n")
         SETUP_REQUIRES += ("cython==3.1.1",)
 
 COMMAND_CLASS = {
@@ -612,9 +569,7 @@ try:
     os.mkdir(credentials_dir)
 except OSError:
     pass
-shutil.copyfile(
-    os.path.join("etc", "roots.pem"), os.path.join(credentials_dir, "roots.pem")
-)
+shutil.copyfile(os.path.join("etc", "roots.pem"), os.path.join(credentials_dir, "roots.pem"))
 
 PACKAGE_DATA = {
     # Binaries that may or may not be present in the final installation, but are

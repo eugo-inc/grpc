@@ -17,6 +17,7 @@
 //
 
 #include "absl/log/log.h"
+#include "absl/log/vlog_is_on.h"
 
 #include <grpc/support/alloc.h>
 #include <grpc/support/atm.h>

@@ -21,14 +21,12 @@ import glob
 import os
 import os.path
 import shutil
-import subprocess
 import sys
 import sysconfig
 import traceback
 
-from setuptools.command import build_ext
-from setuptools.command import build_py
 import support
+from setuptools.command import build_ext, build_py
 
 PYTHON_STEM = os.path.dirname(os.path.abspath(__file__))
 GRPC_STEM = os.path.abspath(PYTHON_STEM + "../../../../")
@@ -61,25 +59,17 @@ def _get_grpc_custom_bdist(decorated_basename, target_bdist_basename):
 
     decorated_path = decorated_basename + GRPC_CUSTOM_BDIST_EXT
     try:
-        url = BINARIES_REPOSITORY + "/{target}".format(target=decorated_path)
+        url = BINARIES_REPOSITORY + f"/{decorated_path}"
         bdist_data = request.urlopen(url).read()
-    except IOError as error:
-        raise CommandError(
-            "{}\n\nCould not find the bdist {}: {}".format(
-                traceback.format_exc(), decorated_path, error.message
-            )
-        )
+    except OSError as error:
+        raise CommandError(f"{traceback.format_exc()}\n\nCould not find the bdist {decorated_path}: {error.message}")
     # Our chosen local bdist path.
     bdist_path = target_bdist_basename + GRPC_CUSTOM_BDIST_EXT
     try:
         with open(bdist_path, "w") as bdist_file:
             bdist_file.write(bdist_data)
-    except IOError as error:
-        raise CommandError(
-            "{}\n\nCould not write grpcio bdist: {}".format(
-                traceback.format_exc(), error.message
-            )
-        )
+    except OSError as error:
+        raise CommandError(f"{traceback.format_exc()}\n\nCould not write grpcio bdist: {error.message}")
     return bdist_path
 
 
@@ -102,13 +92,9 @@ class SphinxDocumentation(setuptools.Command):
 
         source_dir = os.path.join(GRPC_STEM, "doc", "python", "sphinx")
         target_dir = os.path.join(GRPC_STEM, "doc", "build")
-        exit_code = sphinx.cmd.build.build_main(
-            ["-b", "html", "-W", "--keep-going", source_dir, target_dir]
-        )
+        exit_code = sphinx.cmd.build.build_main(["-b", "html", "-W", "--keep-going", source_dir, target_dir])
         if exit_code != 0:
-            raise CommandError(
-                "Documentation generation has warnings or errors"
-            )
+            raise CommandError("Documentation generation has warnings or errors")
 
 
 class BuildProjectMetadata(setuptools.Command):
@@ -124,12 +110,8 @@ class BuildProjectMetadata(setuptools.Command):
         pass
 
     def run(self):
-        with open(
-            os.path.join(PYTHON_STEM, "grpc/_grpcio_metadata.py"), "w"
-        ) as module_file:
-            module_file.write(
-                '__version__ = """{}"""'.format(self.distribution.get_version())
-            )
+        with open(os.path.join(PYTHON_STEM, "grpc/_grpcio_metadata.py"), "w") as module_file:
+            module_file.write(f'__version__ = """{self.distribution.get_version()}"""')
 
 
 class BuildPy(build_py.build_py):
@@ -144,7 +126,7 @@ def _poison_extensions(extensions, message):
     """Includes a file that will always fail to compile in all extensions."""
     poison_filename = os.path.join(PYTHON_STEM, "poison.c")
     with open(poison_filename, "w") as poison:
-        poison.write("#error {}".format(message))
+        poison.write(f"#error {message}")
     for extension in extensions:
         extension.sources = [poison_filename]
 
@@ -202,23 +184,17 @@ def try_cythonize(extensions, linetracing=False, mandatory=True):
             )
             _poison_extensions(
                 extensions,
-                (
-                    "Extensions have been poisoned due to missing"
-                    " Cython-generated code."
-                ),
+                ("Extensions have been poisoned due to missing Cython-generated code."),
             )
         return extensions
     cython_compiler_directives = {}
     if linetracing:
         additional_define_macros = [("CYTHON_TRACE_NOGIL", "1")]
         cython_compiler_directives["linetrace"] = True
+
     return Cython.Build.cythonize(
         extensions,
-        include_path=[
-            include_dir
-            for extension in extensions
-            for include_dir in extension.include_dirs
-        ]
+        include_path=[include_dir for extension in extensions for include_dir in extension.include_dirs]
         + [CYTHON_STEM],
         compiler_directives=cython_compiler_directives,
     )
@@ -254,13 +230,9 @@ class BuildExt(build_ext.build_ext):
 
         def new_compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
             if src.endswith(".c"):
-                extra_postargs = [
-                    arg for arg in extra_postargs if arg != "-std=c++17"
-                ]
+                extra_postargs = [arg for arg in extra_postargs if arg != "-std=c++17"]
             elif src.endswith((".cc", ".cpp")):
-                extra_postargs = [
-                    arg for arg in extra_postargs if arg != "-std=c11"
-                ]
+                extra_postargs = [arg for arg in extra_postargs if arg != "-std=c11"]
             return old_compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
         self.compiler._compile = new_compile
@@ -268,14 +240,10 @@ class BuildExt(build_ext.build_ext):
         compiler = self.compiler.compiler_type
         if compiler in BuildExt.C_OPTIONS:
             for extension in self.extensions:
-                extension.extra_compile_args += list(
-                    BuildExt.C_OPTIONS[compiler]
-                )
+                extension.extra_compile_args += list(BuildExt.C_OPTIONS[compiler])
         if compiler in BuildExt.LINK_OPTIONS:
             for extension in self.extensions:
-                extension.extra_link_args += list(
-                    BuildExt.LINK_OPTIONS[compiler]
-                )
+                extension.extra_link_args += list(BuildExt.LINK_OPTIONS[compiler])
         if not check_and_update_cythonization(self.extensions):
             self.extensions = try_cythonize(self.extensions)
         try:
@@ -283,9 +251,7 @@ class BuildExt(build_ext.build_ext):
         except Exception as error:
             formatted_exception = traceback.format_exc()
             support.diagnose_build_ext_error(self, error, formatted_exception)
-            raise CommandError(
-                "Failed `build_ext` step:\n{}".format(formatted_exception)
-            )
+            raise CommandError(f"Failed `build_ext` step:\n{formatted_exception}")
 
 
 class Gather(setuptools.Command):
@@ -324,9 +290,7 @@ class Clean(setuptools.Command):
         "src/python/grpcio/grpc/_cython/*.so",
         "src/python/grpcio/grpcio.egg-info/",
     )
-    _CURRENT_DIRECTORY = os.path.normpath(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
-    )
+    _CURRENT_DIRECTORY = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../.."))
 
     def initialize_options(self):
         self.all = False
@@ -336,16 +300,12 @@ class Clean(setuptools.Command):
 
     def run(self):
         for path_spec in self._FILE_PATTERNS:
-            this_glob = os.path.normpath(
-                os.path.join(Clean._CURRENT_DIRECTORY, path_spec)
-            )
+            this_glob = os.path.normpath(os.path.join(Clean._CURRENT_DIRECTORY, path_spec))
             abs_paths = glob.glob(this_glob)
             for path in abs_paths:
                 if not str(path).startswith(Clean._CURRENT_DIRECTORY):
-                    raise ValueError(
-                        "Cowardly refusing to delete {}.".format(path)
-                    )
-                print("Removing {}".format(os.path.relpath(path)))
+                    raise ValueError(f"Cowardly refusing to delete {path}.")
+                print(f"Removing {os.path.relpath(path)}")
                 if os.path.isfile(path):
                     os.remove(str(path))
                 else:
