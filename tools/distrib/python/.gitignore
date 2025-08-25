@@ -1,2 +1,3 @@
 distrib_virtualenv/
 build/
+*.stamp

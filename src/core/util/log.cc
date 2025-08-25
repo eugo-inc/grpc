@@ -15,9 +15,10 @@
 // limitations under the License.
 //
 //
-
+// @EUGO_CHANGE: @begin - Newest absl versions no longer transitively include the correct header. So we find `#include "absl/log/log.h"` and right after it, insert `#include "absl/log/vlog_is_on.h"`
 #include "absl/log/log.h"
 #include "absl/log/vlog_is_on.h"
+// @EUGO_CHANGE: @end
 
 #include <grpc/support/alloc.h>
 #include <grpc/support/atm.h>

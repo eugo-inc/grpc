@@ -9,16 +9,15 @@ requires = [
 
 
 [project]
-name = 'grpcio'
-readme = 'README.md'
+name = 'grpcio_tools'
+readme = 'README.rst'
 requires-python = '>=3.12'
 dynamic = ["version"]
 authors = [
     {name = "Eugo, Inc."},
 ]
 
-
-[project.optional-dependencies]
-protobuf = [
-    'grpcio_tools'
+dependencies = [
+    "protobuf>=6.31.1,<7.0.0",
+    "grpcio"
 ]
