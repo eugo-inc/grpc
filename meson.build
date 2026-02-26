@@ -44,6 +44,15 @@ py.extension_module(
     cpp_args: [
         '-DPyMODINIT_FUNC=extern "C" __attribute__((visibility ("default"))) PyObject*',
 
+        # `-fno-exceptions`
+        # setup.py sets this for linux/darwin via EXTRA_ENV_COMPILE_ARGS but we explicitly do not set it as we need exceptions to propagate from C++ code to Cython code.
+
+        # `-fno-wrapv`
+        # setup.py sets this for linux/darwin. Prevents the compiler from assuming signed integer overflow wraps (which is UB in C/C++).
+        # This enables certain optimizer transformations that are only valid when overflow cannot happen.
+        # setup.py uses it, so we match for ABI consistency and because it has optimization benefits.
+        '-fno-wrapv',
+
         # '-DGRPC_ENABLE_FORK_SUPPORT',
         # This macro isn't used in `python/grpcio`, but only in `native/grpc`. But even there it's not set by any CMake option.
         #
@@ -57,9 +66,22 @@ py.extension_module(
         # We don't enable this flag and environment variable neither in python nor in native variants anyway, so we aren't affected by this possible descripence.
 
         # '-DGRPC_DO_NOT_INSTANTIATE_POSIX_POLLER',
-        # This macro, in a similar manner, isn't set by CMake and seems to be only used by package maintaners when building multiple Python wheels for PyPi to work around some bugs related to macOS (at the price of performance reduced on other platforms).
-        # It's only set in `setup.py` and in Bazel files, but in the latter it's also only used when building compilable Python extension.
+        # This macro was removed upstream and replaced by `-DGRPC_PYTHON_BUILD` (see below). It was only set in `setup.py` and Bazel files when bundling `src/core/` directly into `cygrpc.so`.
         # In contrast to `GRPC_ENABLE_FORK_SUPPORT`, there is no corresponding environment variable, so we have even less reasons to worry about that.
+
+        # '-DGRPC_PYTHON_BUILD',
+        # This is the upstream replacement for `GRPC_DO_NOT_INSTANTIATE_POSIX_POLLER`. It is set in `setup.py` and Bazel builds when `src/core/` C++ files are compiled DIRECTLY into `cygrpc.so`.
+        # It guards Python-specific behavior in 4 `src/core/` files:
+        #   1. `posix_engine.cc`     — `ShouldUsePosixPoller()` calls `IsEventEnginePollerForPythonEnabled()` instead of unconditionally returning `true`.
+        #   2. `dns_resolver_plugin.cc` — EventEngine DNS resolver is gated behind the same experiment flag.
+        #   3. `shim.cc`             — `EventEngineExperimentDisabledForPython()` returns `!IsEventEnginePollerForPythonEnabled()` rather than always `false`.
+        #   4. `backup_poller.cc`    — Two uses: re-enables backup polling if the poller experiment is off; `g_can_poll_in_background()` always returns `false` for Python builds.
+        #
+        # WHY WE DO NOT SET IT HERE:
+        # Our Meson build links `cygrpc.so` against system-installed `libgrpc` (compiled via CMake WITHOUT this macro).
+        # We do NOT compile any `src/core/` files ourselves. The macro is only relevant for code compiled into `libgrpc` — which we don't touch.
+        # Therefore, this macro has no effect on our Cython-only compilation and must NOT be set here.
+        # If we ever switch to bundling `src/core/` into `cygrpc.so`, revisit this decision.
 
         # `-DGRPC_POSIX_FORK_ALLOW_PTHREAD_ATFORK`
         # This is not set in any place except PHP extension build and a few related some examples.
@@ -153,6 +175,14 @@ py.extension_module(
 # === @begin: Pure Python ===
 # `py.get_install_dir()` -> site_packages!
 
+# setup.py copies etc/roots.pem into src/python/grpcio/grpc/_cython/_credentials/ at build
+# time, then install_subdir picks it up. Meson doesn't run that copy step, so we install it
+# directly. Without this, the grpc package silently falls back to certifi or system certs.
+install_data(
+    'etc/roots.pem',
+    install_dir: py.get_install_dir() / 'grpc' / '_cython' / '_credentials',
+    install_tag: 'python-runtime',
+)
 install_data(
     [
         'src/python/grpcio/grpc/_cython/_cygrpc/__init__.py',

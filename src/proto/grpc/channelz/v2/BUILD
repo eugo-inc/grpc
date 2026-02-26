@@ -18,12 +18,19 @@ load(
     "grpc_cc_proto_library",
     "grpc_internal_proto_library",
     "grpc_package",
+    "grpc_upb_proto_library",
+    "grpc_upb_proto_reflection_library",
 )
 
 licenses(["notice"])
 
+# TODO(rishesh): Enable parse_headers once when internal build system limitations are resolved.
 grpc_package(
     name = "src/proto/grpc/channelz/v2",
+    features = [
+        "layering_check",
+        # "parse_headers",
+    ],
     visibility = "grpc",
 )
 
@@ -34,6 +41,16 @@ grpc_internal_proto_library(
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
+)
+
+grpc_upb_proto_library(
+    name = "channelz_upb_proto",
+    deps = ["channelz_proto"],
+)
+
+grpc_upb_proto_reflection_library(
+    name = "channelz_upbdefs_proto",
+    deps = ["channelz_proto"],
 )
 
 grpc_internal_proto_library(
@@ -54,6 +71,14 @@ grpc_internal_proto_library(
     name = "latent_see_proto",
     srcs = ["latent_see.proto"],
     has_services = True,
+    deps = [
+        ":property_list_proto",
+    ],
+)
+
+grpc_upb_proto_library(
+    name = "property_list_upb_proto",
+    deps = ["property_list_proto"],
 )
 
 grpc_cc_proto_library(
@@ -76,13 +101,26 @@ grpc_internal_proto_library(
 )
 
 grpc_cc_proto_library(
+    name = "promise_cc_proto",
+    deps = [":promise_proto"],
+)
+
+grpc_cc_proto_library(
     name = "channelz_cc_proto",
+    visibility = [
+        "//bazel:channelz",
+    ],
     deps = [":channelz_proto"],
 )
 
 grpc_cc_proto_library(
     name = "property_list_cc_proto",
     deps = [":property_list_proto"],
+)
+
+grpc_upb_proto_library(
+    name = "promise_upb_proto",
+    deps = [":promise_proto"],
 )
 
 grpc_internal_proto_library(
@@ -97,12 +135,18 @@ grpc_internal_proto_library(
 
 grpc_cc_proto_library(
     name = "service_cc_proto",
+    visibility = [
+        "//bazel:channelz",
+    ],
     deps = [":service_proto"],
 )
 
 grpc_cc_grpc_library(
     name = "service_cc_grpc",
     srcs = [":service_proto"],
+    visibility = [
+        "//bazel:channelz",
+    ],
     deps = [
         ":service_cc_proto",
     ],

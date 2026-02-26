@@ -18,6 +18,7 @@
 
 #include "src/cpp/ext/otel/otel_server_call_tracer.h"
 
+#include <grpc/support/log.h>
 #include <grpc/support/port_platform.h>
 
 #include <array>
@@ -27,12 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/functional/any_invocable.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
-#include "absl/types/span.h"
 #include "opentelemetry/context/context.h"
 #include "opentelemetry/metrics/sync_instruments.h"
 #include "src/core/call/metadata_batch.h"
@@ -47,8 +42,15 @@
 #include "src/core/lib/surface/call.h"
 #include "src/core/lib/transport/transport.h"
 #include "src/core/telemetry/tcp_tracer.h"
+#include "src/core/util/grpc_check.h"
 #include "src/cpp/ext/otel/key_value_iterable.h"
 #include "src/cpp/ext/otel/otel_plugin.h"
+#include "absl/functional/any_invocable.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
+#include "absl/types/span.h"
 
 namespace grpc {
 namespace internal {
@@ -139,11 +141,13 @@ void OpenTelemetryPluginImpl::ServerCallTracerInterface::
                             /*is_client=*/false, otel_plugin_));
   }
   if (otel_plugin_->tracer_ != nullptr) {
-    GrpcTextMapCarrier carrier(recv_initial_metadata);
-    opentelemetry::context::Context context;
-    context = otel_plugin_->text_map_propagator_->Extract(carrier, context);
     opentelemetry::trace::StartSpanOptions options;
-    options.parent = context;
+    if (otel_plugin_->text_map_propagator_ != nullptr) {
+      GrpcTextMapCarrier carrier(recv_initial_metadata);
+      opentelemetry::context::Context context;
+      context = otel_plugin_->text_map_propagator_->Extract(carrier, context);
+      options.parent = context;
+    }
     span_ = otel_plugin_->tracer_->StartSpan(
         absl::StrCat("Recv.", GetMethodFromPath(path_)), options);
     // We are intentionally reusing census_context to save opentelemetry's Span
@@ -198,6 +202,13 @@ void OpenTelemetryPluginImpl::ServerCallTracerInterface::
 
 void OpenTelemetryPluginImpl::ServerCallTracerInterface::
     RecordSendInitialMetadata(grpc_metadata_batch* send_initial_metadata) {
+  GRPC_CHECK(
+      !grpc_core::IsCallTracerSendInitialMetadataIsAnAnnotationEnabled());
+  MutateSendInitialMetadata(send_initial_metadata);
+}
+
+void OpenTelemetryPluginImpl::ServerCallTracerInterface::
+    MutateSendInitialMetadata(grpc_metadata_batch* send_initial_metadata) {
   scope_config_->active_plugin_options_view().ForEach(
       [&](const InternalOpenTelemetryPluginOption& plugin_option,
           size_t index) {
@@ -243,7 +254,14 @@ void OpenTelemetryPluginImpl::ServerCallTracerInterface::
 }
 
 void OpenTelemetryPluginImpl::ServerCallTracerInterface::
-    RecordSendTrailingMetadata(
+    RecordSendTrailingMetadata(grpc_metadata_batch* send_trailing_metadata) {
+  GRPC_CHECK(
+      !grpc_core::IsCallTracerSendTrailingMetadataIsAnAnnotationEnabled());
+  MutateSendTrailingMetadata(send_trailing_metadata);
+}
+
+void OpenTelemetryPluginImpl::ServerCallTracerInterface::
+    MutateSendTrailingMetadata(
         grpc_metadata_batch* /*send_trailing_metadata*/) {
   // We need to record the time when the trailing metadata was sent to
   // mark the completeness of the request.
@@ -305,6 +323,20 @@ void OpenTelemetryPluginImpl::ServerCallTracerInterface::RecordIncomingBytes(
 void OpenTelemetryPluginImpl::ServerCallTracerInterface::RecordOutgoingBytes(
     const TransportByteSize& transport_byte_size) {
   outgoing_bytes_.fetch_add(transport_byte_size.data_bytes);
+}
+
+void OpenTelemetryPluginImpl::ServerCallTracerInterface::RecordAnnotation(
+    const Annotation& annotation) {
+  if (annotation.type() == grpc_core::CallTracerAnnotationInterface::
+                               AnnotationType::kSendInitialMetadata ||
+      annotation.type() == grpc_core::CallTracerAnnotationInterface::
+                               AnnotationType::kSendTrailingMetadata) {
+    // Otel does not have any immutable tracing for send initial/trailing
+    // metadata. All Otel work for send initial/trailing metadata is mutation,
+    // which is handled in MutateSendInitialMetadata/MutateSendTrailingMetadata.
+    return;
+  }
+  RecordAnnotation(annotation.ToString());
 }
 
 void OpenTelemetryPluginImpl::ServerCallTracerInterface::RecordAnnotation(

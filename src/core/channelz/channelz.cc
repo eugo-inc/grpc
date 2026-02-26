@@ -30,12 +30,6 @@
 #include <string>
 #include <tuple>
 
-#include "absl/cleanup/cleanup.h"
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/strip.h"
 #include "src/core/channelz/channelz_registry.h"
 #include "src/core/channelz/property_list.h"
 #include "src/core/lib/address_utils/parse_address.h"
@@ -52,6 +46,12 @@
 #include "src/core/util/uri.h"
 #include "src/core/util/useful.h"
 #include "src/proto/grpc/channelz/v2/channelz.upb.h"
+#include "absl/cleanup/cleanup.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/strip.h"
 
 namespace grpc_core {
 namespace channelz {
@@ -63,14 +63,17 @@ namespace channelz {
 void DataSinkImplementation::AddData(absl::string_view name,
                                      std::unique_ptr<Data> data) {
   MutexLock lock(&mu_);
-  additional_info_.emplace(name, std::move(data));
+  additional_info_.emplace_back(Element{std::string(name), std::move(data)});
 }
 
-Json::Object DataSinkImplementation::Finalize(bool) {
+Json::Array DataSinkImplementation::Finalize(bool) {
   MutexLock lock(&mu_);
-  Json::Object out;
+  Json::Array out;
   for (auto& [name, additional_info] : additional_info_) {
-    out[name] = Json::FromObject(additional_info->ToJson());
+    Json::Object obj;
+    obj["name"] = Json::FromString(name);
+    obj["value"] = Json::FromObject(additional_info->ToJson());
+    out.push_back(Json::FromObject(std::move(obj)));
   }
   return out;
 }
@@ -119,10 +122,10 @@ std::string BaseNode::RenderJsonString() {
 void BaseNode::PopulateJsonFromDataSources(Json::Object& json) {
   auto info = AdditionalInfo();
   if (info.empty()) return;
-  json["additionalInfo"] = Json::FromObject(std::move(info));
+  json["additionalInfo"] = Json::FromArray(std::move(info));
 }
 
-Json::Object BaseNode::AdditionalInfo() {
+Json::Array BaseNode::AdditionalInfo() {
   auto done = std::make_shared<Notification>();
   auto sink_impl = std::make_shared<DataSinkImplementation>();
   {
@@ -138,20 +141,14 @@ Json::Object BaseNode::AdditionalInfo() {
   return sink_impl->Finalize(!completed);
 }
 
-void BaseNode::RunZTrace(
-    absl::string_view name, Timestamp deadline,
-    std::map<std::string, std::string> args,
+std::unique_ptr<ZTrace> BaseNode::RunZTrace(
+    absl::string_view name, ZTrace::Args args,
     std::shared_ptr<grpc_event_engine::experimental::EventEngine> event_engine,
-    absl::AnyInvocable<void(Json)> callback) {
-  // Limit deadline to help contain potential resource exhaustion due to
-  // tracing.
-  deadline = std::min(deadline, Timestamp::Now() + Duration::Minutes(10));
+    ZTrace::Callback callback) {
   auto fail = [&callback, event_engine](absl::Status status) {
     event_engine->Run(
         [callback = std::move(callback), status = std::move(status)]() mutable {
-          Json::Object object;
-          object["status"] = Json::FromString(status.ToString());
-          callback(Json::FromObject(std::move(object)));
+          callback(status);
         });
   };
   std::unique_ptr<ZTrace> ztrace;
@@ -165,30 +162,33 @@ void BaseNode::RunZTrace(
         } else {
           fail(absl::InternalError(
               absl::StrCat("Ambiguous ztrace handler: ", name)));
-          return;
+          return nullptr;
         }
       }
     }
   }
   if (ztrace == nullptr) {
     fail(absl::NotFoundError(absl::StrCat("ztrace not found: ", name)));
-    return;
+    return nullptr;
   }
-  ztrace->Run(deadline, std::move(args), event_engine, std::move(callback));
+  ztrace->Run(std::move(args), event_engine, std::move(callback));
+  return ztrace;
 }
 
 void BaseNode::SerializeEntity(grpc_channelz_v2_Entity* entity,
-                               upb_Arena* arena) {
+                               upb_Arena* arena, absl::Duration timeout) {
   grpc_channelz_v2_Entity_set_id(entity, uuid());
   grpc_channelz_v2_Entity_set_kind(
       entity, StdStringToUpbString(EntityTypeToKind(type_)));
+  std::vector<WeakRefCountedPtr<BaseNode>> parent_nodes;
   {
     MutexLock lock(&parent_mu_);
-    auto* parents =
-        grpc_channelz_v2_Entity_resize_parents(entity, parents_.size(), arena);
-    for (const auto& parent : parents_) {
-      *parents++ = parent->uuid();
-    }
+    parent_nodes.assign(parents_.begin(), parents_.end());
+  }
+  auto* parents = grpc_channelz_v2_Entity_resize_parents(
+      entity, parent_nodes.size(), arena);
+  for (const auto& parent : parent_nodes) {
+    *parents++ = parent->uuid();
   }
   grpc_channelz_v2_Entity_set_orphaned(entity, orphaned_index_ != 0);
 
@@ -208,8 +208,7 @@ void BaseNode::SerializeEntity(grpc_channelz_v2_Entity* entity,
   }
   make_data_sink().AddData("v1_compatibility",
                            PropertyList().Set("name", name()));
-  bool completed =
-      done->WaitForNotificationWithTimeout(absl::Milliseconds(100));
+  bool completed = done->WaitForNotificationWithTimeout(timeout);
   sink_impl->Finalize(!completed, entity, arena);
 
   trace_.Render(entity, arena);
@@ -219,11 +218,11 @@ void BaseNode::AddNodeSpecificData(DataSink) {
   // Default implementation does nothing.
 }
 
-std::string BaseNode::SerializeEntityToString() {
+std::string BaseNode::SerializeEntityToString(absl::Duration timeout) {
   upb_Arena* arena = upb_Arena_New();
   auto cleanup = absl::MakeCleanup([arena]() { upb_Arena_Free(arena); });
   grpc_channelz_v2_Entity* entity = grpc_channelz_v2_Entity_new(arena);
-  SerializeEntity(entity, arena);
+  SerializeEntity(entity, arena, timeout);
   size_t length;
   auto* bytes = grpc_channelz_v2_Entity_serialize(entity, arena, &length);
   return std::string(bytes, length);

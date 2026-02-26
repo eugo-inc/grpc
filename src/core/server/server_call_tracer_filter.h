@@ -20,7 +20,6 @@
 #include <functional>
 #include <utility>
 
-#include "absl/status/status.h"
 #include "src/core/call/call_finalization.h"
 #include "src/core/config/core_configuration.h"
 #include "src/core/lib/channel/channel_stack.h"
@@ -33,6 +32,7 @@
 #include "src/core/lib/transport/transport.h"
 #include "src/core/telemetry/call_tracer.h"
 #include "src/core/util/latent_see.h"
+#include "absl/status/status.h"
 
 namespace grpc_core {
 
@@ -51,7 +51,7 @@ class ServerCallTracerFilter
     void OnClientInitialMetadata(ClientMetadata& client_initial_metadata) {
       GRPC_LATENT_SEE_SCOPE(
           "ServerCallTracerFilter::Call::OnClientInitialMetadata");
-      auto* call_tracer = MaybeGetContext<ServerCallTracerInterface>();
+      auto* call_tracer = MaybeGetContext<ServerCallTracer>();
       if (call_tracer == nullptr) return;
       call_tracer->RecordReceivedInitialMetadata(&client_initial_metadata);
     }
@@ -59,14 +59,14 @@ class ServerCallTracerFilter
     void OnServerInitialMetadata(ServerMetadata& server_initial_metadata) {
       GRPC_LATENT_SEE_SCOPE(
           "ServerCallTracerFilter::Call::OnServerInitialMetadata");
-      auto* call_tracer = MaybeGetContext<ServerCallTracerInterface>();
+      auto* call_tracer = MaybeGetContext<ServerCallTracer>();
       if (call_tracer == nullptr) return;
       call_tracer->RecordSendInitialMetadata(&server_initial_metadata);
     }
 
     void OnFinalize(const grpc_call_final_info* final_info) {
       GRPC_LATENT_SEE_SCOPE("ServerCallTracerFilter::Call::OnFinalize");
-      auto* call_tracer = MaybeGetContext<ServerCallTracerInterface>();
+      auto* call_tracer = MaybeGetContext<ServerCallTracer>();
       if (call_tracer == nullptr) return;
       call_tracer->RecordEnd(final_info);
     }
@@ -74,7 +74,7 @@ class ServerCallTracerFilter
     void OnServerTrailingMetadata(ServerMetadata& server_trailing_metadata) {
       GRPC_LATENT_SEE_SCOPE(
           "ServerCallTracerFilter::Call::OnServerTrailingMetadata");
-      auto* call_tracer = MaybeGetContext<ServerCallTracerInterface>();
+      auto* call_tracer = MaybeGetContext<ServerCallTracer>();
       if (call_tracer == nullptr) return;
       call_tracer->RecordSendTrailingMetadata(&server_trailing_metadata);
     }
@@ -82,6 +82,10 @@ class ServerCallTracerFilter
     static inline const NoInterceptor OnClientToServerMessage;
     static inline const NoInterceptor OnClientToServerHalfClose;
     static inline const NoInterceptor OnServerToClientMessage;
+
+    channelz::PropertyList ChannelzProperties() {
+      return channelz::PropertyList();
+    }
   };
 };
 

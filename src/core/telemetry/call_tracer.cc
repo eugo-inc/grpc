@@ -18,17 +18,58 @@
 
 #include "src/core/telemetry/call_tracer.h"
 
-#include <grpc/support/port_platform.h>
-
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "src/core/call/message.h"
+#include "src/core/call/metadata_batch.h"
+#include "src/core/lib/channel/channel_args.h"
+#include "src/core/lib/experiments/experiments.h"
+#include "src/core/lib/iomgr/error.h"
 #include "src/core/lib/promise/context.h"
+#include "src/core/lib/resource_quota/arena.h"
+#include "src/core/lib/transport/call_final_info.h"
 #include "src/core/telemetry/tcp_tracer.h"
+#include "src/core/util/grpc_check.h"
+#include "src/core/util/ref_counted_string.h"
+#include "absl/functional/function_ref.h"
+#include "absl/status/status.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 
 namespace grpc_core {
+
+std::string SendInitialMetadataAnnotation::ToString() const {
+  return "SendInitialMetadata";
+}
+
+void SendInitialMetadataAnnotation::ForEachKeyValue(
+    absl::FunctionRef<void(absl::string_view, ValueType)> f) const {
+  metadata_->Log([f](absl::string_view key, absl::string_view value) {
+    if (IsMetadataKeyAllowedInDebugOutput(key)) {
+      f(key, value);
+    } else {
+      f(key, "[REDACTED]");
+    }
+  });
+}
+
+std::string SendTrailingMetadataAnnotation::ToString() const {
+  return "SendTrailingMetadata";
+}
+
+void SendTrailingMetadataAnnotation::ForEachKeyValue(
+    absl::FunctionRef<void(absl::string_view, ValueType)> f) const {
+  metadata_->Log([f](absl::string_view key, absl::string_view value) {
+    if (IsMetadataKeyAllowedInDebugOutput(key)) {
+      f(key, value);
+    } else {
+      f(key, "[REDACTED]");
+    }
+  });
+}
 
 CallTracerInterface::TransportByteSize&
 CallTracerInterface::TransportByteSize::operator+=(
@@ -86,7 +127,7 @@ class DelegatingClientCallTracer : public ClientCallTracerInterface {
     explicit DelegatingClientCallAttemptTracer(
         std::vector<CallAttemptTracer*> tracers)
         : tracers_(std::move(tracers)) {
-      DCHECK(!tracers_.empty());
+      GRPC_DCHECK(!tracers_.empty());
     }
     ~DelegatingClientCallAttemptTracer() override {}
     void RecordSendInitialMetadata(
@@ -95,10 +136,22 @@ class DelegatingClientCallTracer : public ClientCallTracerInterface {
         tracer->RecordSendInitialMetadata(send_initial_metadata);
       }
     }
+    void MutateSendInitialMetadata(
+        grpc_metadata_batch* send_initial_metadata) override {
+      for (auto* tracer : tracers_) {
+        tracer->MutateSendInitialMetadata(send_initial_metadata);
+      }
+    }
     void RecordSendTrailingMetadata(
         grpc_metadata_batch* send_trailing_metadata) override {
       for (auto* tracer : tracers_) {
         tracer->RecordSendTrailingMetadata(send_trailing_metadata);
+      }
+    }
+    void MutateSendTrailingMetadata(
+        grpc_metadata_batch* send_trailing_metadata) override {
+      for (auto* tracer : tracers_) {
+        tracer->MutateSendTrailingMetadata(send_trailing_metadata);
       }
     }
     void RecordSendMessage(const Message& send_message) override {
@@ -192,13 +245,16 @@ class DelegatingClientCallTracer : public ClientCallTracerInterface {
   };
   explicit DelegatingClientCallTracer(ClientCallTracerInterface* tracer)
       : tracers_{tracer} {}
+  explicit DelegatingClientCallTracer(
+      absl::Span<ClientCallTracerInterface* const> tracers)
+      : tracers_(tracers.begin(), tracers.end()) {}
   ~DelegatingClientCallTracer() override {}
   CallAttemptTracer* StartNewAttempt(bool is_transparent_retry) override {
     std::vector<CallAttemptTracer*> attempt_tracers;
     attempt_tracers.reserve(tracers_.size());
     for (auto* tracer : tracers_) {
       auto* attempt_tracer = tracer->StartNewAttempt(is_transparent_retry);
-      DCHECK_NE(attempt_tracer, nullptr);
+      GRPC_DCHECK_NE(attempt_tracer, nullptr);
       attempt_tracers.push_back(attempt_tracer);
     }
     return GetContext<Arena>()->ManagedNew<DelegatingClientCallAttemptTracer>(
@@ -236,6 +292,9 @@ class DelegatingServerCallTracer : public ServerCallTracerInterface {
  public:
   explicit DelegatingServerCallTracer(ServerCallTracerInterface* tracer)
       : tracers_{tracer} {}
+  explicit DelegatingServerCallTracer(
+      absl::Span<ServerCallTracerInterface* const> tracers)
+      : tracers_(tracers.begin(), tracers.end()) {}
   ~DelegatingServerCallTracer() override {}
   void RecordSendInitialMetadata(
       grpc_metadata_batch* send_initial_metadata) override {
@@ -243,10 +302,22 @@ class DelegatingServerCallTracer : public ServerCallTracerInterface {
       tracer->RecordSendInitialMetadata(send_initial_metadata);
     }
   }
+  void MutateSendInitialMetadata(
+      grpc_metadata_batch* send_initial_metadata) override {
+    for (auto* tracer : tracers_) {
+      tracer->MutateSendInitialMetadata(send_initial_metadata);
+    }
+  }
   void RecordSendTrailingMetadata(
       grpc_metadata_batch* send_trailing_metadata) override {
     for (auto* tracer : tracers_) {
       tracer->RecordSendTrailingMetadata(send_trailing_metadata);
+    }
+  }
+  void MutateSendTrailingMetadata(
+      grpc_metadata_batch* send_trailing_metadata) override {
+    for (auto* tracer : tracers_) {
+      tracer->MutateSendTrailingMetadata(send_trailing_metadata);
     }
   }
   void RecordSendMessage(const Message& send_message) override {
@@ -333,57 +404,61 @@ class DelegatingServerCallTracer : public ServerCallTracerInterface {
   std::vector<ServerCallTracerInterface*> tracers_;
 };
 
-void AddClientCallTracerToContext(Arena* arena,
-                                  ClientCallTracerInterface* tracer) {
-  if (arena->GetContext<CallTracerAnnotationInterface>() == nullptr) {
-    // This is the first call tracer. Set it directly.
-    arena->SetContext<CallTracerAnnotationInterface>(tracer);
+void CallTracer::RecordSendInitialMetadata(
+    grpc_metadata_batch* send_initial_metadata) {
+  if (IsCallTracerSendInitialMetadataIsAnAnnotationEnabled()) {
+    RecordAnnotation(SendInitialMetadataAnnotation(send_initial_metadata));
+    interface_->MutateSendInitialMetadata(send_initial_metadata);
   } else {
-    // There was already a call tracer present.
-    auto* orig_tracer = DownCast<ClientCallTracerInterface*>(
-        arena->GetContext<CallTracerAnnotationInterface>());
-    if (orig_tracer->IsDelegatingTracer()) {
-      // We already created a delegating tracer. Just add the new tracer to the
-      // list.
-      DownCast<DelegatingClientCallTracer*>(orig_tracer)->AddTracer(tracer);
-    } else {
-      // Create a new delegating tracer and add the first tracer and the new
-      // tracer to the list.
-      auto* delegating_tracer =
-          GetContext<Arena>()->ManagedNew<DelegatingClientCallTracer>(
-              orig_tracer);
-      arena->SetContext<CallTracerAnnotationInterface>(delegating_tracer);
-      delegating_tracer->AddTracer(tracer);
-    }
+    interface_->RecordSendInitialMetadata(send_initial_metadata);
   }
 }
 
-void AddServerCallTracerToContext(Arena* arena,
-                                  ServerCallTracerInterface* tracer) {
-  DCHECK_EQ(arena->GetContext<CallTracerInterface>(),
-            arena->GetContext<CallTracerAnnotationInterface>());
-  if (arena->GetContext<CallTracerAnnotationInterface>() == nullptr) {
-    // This is the first call tracer. Set it directly.
-    arena->SetContext<CallTracerAnnotationInterface>(tracer);
-    arena->SetContext<CallTracerInterface>(tracer);
+void CallTracer::RecordSendTrailingMetadata(
+    grpc_metadata_batch* send_trailing_metadata) {
+  if (IsCallTracerSendTrailingMetadataIsAnAnnotationEnabled()) {
+    RecordAnnotation(SendTrailingMetadataAnnotation(send_trailing_metadata));
+    interface_->MutateSendTrailingMetadata(send_trailing_metadata);
   } else {
-    // There was already a call tracer present.
-    auto* orig_tracer = DownCast<ServerCallTracerInterface*>(
-        arena->GetContext<CallTracerAnnotationInterface>());
-    if (orig_tracer->IsDelegatingTracer()) {
-      // We already created a delegating tracer. Just add the new tracer to the
-      // list.
-      DownCast<DelegatingServerCallTracer*>(orig_tracer)->AddTracer(tracer);
-    } else {
-      // Create a new delegating tracer and add the first tracer and the new
-      // tracer to the list.
+    interface_->RecordSendTrailingMetadata(send_trailing_metadata);
+  }
+}
+
+void SetClientCallTracer(Arena* arena,
+                         absl::Span<ClientCallTracerInterface* const> tracer) {
+  GRPC_DCHECK_EQ(arena->GetContext<CallSpan>(), nullptr);
+  switch (tracer.size()) {
+    case 0:
+      return;
+    case 1:
+      arena->SetContext<CallSpan>(WrapClientCallTracer(tracer[0], arena));
+      return;
+    default:
       auto* delegating_tracer =
-          GetContext<Arena>()->ManagedNew<DelegatingServerCallTracer>(
-              orig_tracer);
-      arena->SetContext<CallTracerAnnotationInterface>(delegating_tracer);
-      arena->SetContext<CallTracerInterface>(delegating_tracer);
-      delegating_tracer->AddTracer(tracer);
-    }
+          GetContext<Arena>()->ManagedNew<DelegatingClientCallTracer>(tracer);
+      arena->SetContext<CallSpan>(
+          WrapClientCallTracer(delegating_tracer, arena));
+      break;
+  }
+}
+
+void SetServerCallTracer(Arena* arena,
+                         absl::Span<ServerCallTracerInterface* const> tracer) {
+  GRPC_DCHECK_EQ(arena->GetContext<CallSpan>(), nullptr);
+  switch (tracer.size()) {
+    case 0:
+      return;
+    case 1:
+      arena->SetContext<CallSpan>(WrapServerCallTracer(tracer[0], arena));
+      arena->SetContext<CallTracer>(WrapServerCallTracer(tracer[0], arena));
+      return;
+    default:
+      auto* delegating_tracer =
+          GetContext<Arena>()->ManagedNew<DelegatingServerCallTracer>(tracer);
+      auto* wrapper = WrapServerCallTracer(delegating_tracer, arena);
+      arena->SetContext<CallSpan>(wrapper);
+      arena->SetContext<CallTracer>(wrapper);
+      break;
   }
 }
 

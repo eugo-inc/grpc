@@ -20,28 +20,10 @@
 FROM dockcross/linux-armv7
 
 # Configure git early so the cache reused by other py build based on the same image.
-# TODO: simplify the list of third_party modules list
-# NOTE: git>=2.46 allows leading paths like third_party/* to include all subdirectories
-# current docker base images use git versions lower than 2.46 and hence require separate configs for each submodule
 RUN git config --global protocol.file.allow always && \
   git config --global --add safe.directory /var/local/jenkins/grpc && \
   git config --global --add safe.directory /var/local/jenkins/grpc/.git && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/abseil-cpp && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/benchmark && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/bloaty && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/boringssl-with-bazel && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/cares/cares && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/envoy-api && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/googleapis && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/googletest && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/opencensus-proto && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/opentelemetry && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/opentelemetry-cpp && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/protobuf && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/protoc-gen-validate && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/re2 && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/xds && \
-  git config --global --add safe.directory /var/local/jenkins/grpc/.git/modules/third_party/zlib
+  git config --global --add safe.directory '/var/local/jenkins/grpc/.git/modules/third_party/*'
 
 
 RUN apt update && apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
@@ -53,11 +35,12 @@ ADD install_python_for_wheel_crosscompilation.sh /scripts/install_python_for_whe
 # grep grpc_artifact_python_ tools/bazelify_tests/dockerimage_current_versions.bzl | grep -oP '(?<=docker://)[^"]+(?=")'
 # IMG=one_of_the_images_from_the_command_above
 # docker run --rm $IMG bash -c 'ls -l /opt/python/cp3{9,1}*' | sed -E 's#^[^/]+##'
-RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.9.20" "3.9.20" /opt/python/cp39-cp39
-RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.10.15" "3.10.15" /opt/python/cp310-cp310
-RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.11.10" "3.11.10" /opt/python/cp311-cp311
-RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.12.6" "3.12.6" /opt/python/cp312-cp312
-RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.13.0" "3.13.0rc2" /opt/python/cp313-cp313
+RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.9.23" "3.9.23" /opt/python/cp39-cp39
+RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.10.18" "3.10.18" /opt/python/cp310-cp310
+RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.11.13" "3.11.13" /opt/python/cp311-cp311
+RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.12.11" "3.12.11" /opt/python/cp312-cp312
+RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.13.5" "3.13.5" /opt/python/cp313-cp313
+RUN /scripts/install_python_for_wheel_crosscompilation.sh "3.14.0" "3.14.0rc1" /opt/python/cp314-cp314
 
 ENV AUDITWHEEL_ARCH armv7l
 ENV AUDITWHEEL_PLAT linux_armv7l
@@ -76,7 +59,6 @@ RUN unset CMAKE_TOOLCHAIN_FILE && unset AS AR CC CPP CXX LD STRIP OBJCOPY \
     && make -j4 && make install \
     && cd ../.. \
     && rm -rf ccache-4.11.3 ccache.tar.gz
-
 
 
 # The dockcross base of this image sets CC and CXX to absolute paths, which makes it impossible to redirect their invocations

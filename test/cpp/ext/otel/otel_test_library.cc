@@ -23,9 +23,6 @@
 #include <atomic>
 #include <memory>
 
-#include "absl/functional/any_invocable.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "opentelemetry/metrics/provider.h"
 #include "opentelemetry/sdk/metrics/export/metric_producer.h"
 #include "opentelemetry/sdk/metrics/meter_provider.h"
@@ -38,6 +35,9 @@
 #include "test/core/test_util/test_config.h"
 #include "test/cpp/end2end/test_service_impl.h"
 #include "test/cpp/util/byte_buffer_proto_helper.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "absl/functional/any_invocable.h"
 
 namespace {
 
@@ -164,9 +164,7 @@ class AddLabelsFilter : public grpc_core::ChannelFilter {
   grpc_core::ArenaPromise<grpc_core::ServerMetadataHandle> MakeCallPromise(
       grpc_core::CallArgs call_args,
       grpc_core::NextPromiseFactory next_promise_factory) override {
-    using CallAttemptTracer =
-        grpc_core::ClientCallTracerInterface::CallAttemptTracer;
-    auto* call_tracer = grpc_core::GetContext<CallAttemptTracer>();
+    auto* call_tracer = grpc_core::GetContext<grpc_core::CallAttemptTracer>();
     EXPECT_NE(call_tracer, nullptr);
     for (const auto& pair : labels_to_inject_) {
       call_tracer->SetOptionalLabel(pair.first, pair.second);
@@ -272,8 +270,10 @@ void OpenTelemetryPluginEnd2EndTest::Init(Options config) {
 }
 
 void OpenTelemetryPluginEnd2EndTest::TearDown() {
-  server_->Shutdown();
-  grpc_shutdown_blocking();
+  if (server_ != nullptr) {
+    server_->Shutdown();
+    grpc_shutdown_blocking();
+  }
   grpc_core::ServerCallTracerFactory::TestOnlyReset();
   grpc_core::GlobalStatsPluginRegistryTestPeer::
       ResetGlobalStatsPluginRegistry();
