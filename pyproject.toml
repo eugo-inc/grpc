@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# @EUGO_CHANGE: @begin: Replaced setuptools with meson-python build backend.
 [build-system]
 build-backend = 'mesonpy'
 requires = [
@@ -39,3 +39,4 @@ dependencies = [
 protobuf = [
     'grpcio_tools'
 ]
+# @EUGO_CHANGE: @end

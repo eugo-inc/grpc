@@ -91,10 +91,7 @@ CLASSIFIERS = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-] + [
-    f"Programming Language :: Python :: {x}"
-    for x in python_version.SUPPORTED_PYTHON_VERSIONS
-]
+] + [f"Programming Language :: Python :: {x}" for x in python_version.SUPPORTED_PYTHON_VERSIONS]
 
 
 def _env_bool_value(env_name, default):
@@ -236,7 +233,6 @@ if sys.platform == "darwin":
 EXTRA_ENV_COMPILE_ARGS = os.environ.get("GRPC_PYTHON_CFLAGS", None)
 EXTRA_ENV_LINK_ARGS = os.environ.get("GRPC_PYTHON_LDFLAGS", None)
 if EXTRA_ENV_COMPILE_ARGS is None:
-
     # NOTE: Keep in sync with c- and cpp-specific arg filters!
     #       For Linux and Darwin args, update
     #       BuildExt.build_extensions#new_compile() in commands.py
@@ -394,9 +390,7 @@ DEFINE_MACROS += (
 
 asm_key = ""
 if BUILD_WITH_BORING_SSL_ASM and not BUILD_WITH_SYSTEM_OPENSSL:
-    boringssl_asm_platform = (
-        BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM or sysconfig.get_platform()
-    )
+    boringssl_asm_platform = BUILD_OVERRIDE_BORING_SSL_ASM_PLATFORM or sysconfig.get_platform()
     if "i686" in boringssl_asm_platform:
         print("Enabling SSE2 on %s platform" % boringssl_asm_platform)
         EXTRA_COMPILE_ARGS.append("-msse2")
@@ -522,7 +516,7 @@ def cython_extensions_and_necessity():
                 # @EUGO_CHANGE: @begin: upstream unconditionally adds initialize.cc, but when
                 # BUILD_WITH_SYSTEM_ABSL=true the system libabsl_log_initialize.so already
                 # provides absl::InitializeLog(). Compiling it again causes duplicate symbol
-                # errors at link time. Guard it so it's only included for bundled-abseil builds.
+                # errors at link time. Guard it so it's only included for bundled-abseil builds. See https://github.com/grpc/grpc/issues/41696
                 + ([] if BUILD_WITH_SYSTEM_ABSL else ["third_party/abseil-cpp/absl/log/initialize.cc"])
                 # @EUGO_CHANGE: @end
             ),
