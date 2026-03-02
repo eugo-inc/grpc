@@ -17,43 +17,41 @@
 //
 #include "src/core/ext/transport/chttp2/transport/ping_promise.h"
 
-#include "absl/log/log.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include <cstdint>
+#include <optional>
+#include <utility>
+
 #include "src/core/config/core_configuration.h"
+#include "src/core/ext/transport/chttp2/transport/write_cycle.h"
+#include "src/core/lib/promise/context.h"
 #include "src/core/lib/promise/map.h"
 #include "src/core/lib/promise/party.h"
 #include "src/core/lib/promise/sleep.h"
 #include "src/core/lib/promise/try_seq.h"
-#include "src/core/util/notification.h"
 #include "src/core/util/ref_counted_ptr.h"
 #include "src/core/util/time.h"
 #include "test/core/call/yodel/yodel_test.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "absl/log/log.h"
+#include "absl/status/status.h"
 
 namespace grpc_core {
 
+namespace {
 using ::grpc_core::http2::PingInterface;
 using ::grpc_core::http2::PingManager;
 using ::testing::MockFunction;
 using ::testing::StrictMock;
-using ::testing::WithArgs;
+constexpr Duration kInterval = Duration::Seconds(10);
+constexpr Duration kLongInterval = Duration::Hours(1);
+constexpr Duration kShortInterval = Duration::Seconds(1);
 
 class MockPingInterface : public PingInterface {
  public:
-  MOCK_METHOD(Promise<absl::Status>, SendPing, (SendPingArgs args), (override));
-  MOCK_METHOD(Promise<absl::Status>, TriggerWrite, (), (override));
+  MOCK_METHOD(absl::Status, TriggerWrite, (), (override));
   MOCK_METHOD(Promise<absl::Status>, PingTimeout, (), (override));
 
-  void ExpectSendPing(SendPingArgs expected_args) {
-    EXPECT_CALL(*this, SendPing)
-        .WillOnce(WithArgs<0>([expected_args](SendPingArgs args) {
-          EXPECT_EQ(expected_args.ack, args.ack);
-          LOG(INFO) << "MockPingInterface SendPing Polled (ack: " << args.ack
-                    << " opaque_data: " << args.opaque_data << ")."
-                    << "Expected (ack: " << expected_args.ack << ")";
-          return Immediate(absl::OkStatus());
-        }));
-  }
   void ExpectPingTimeout() {
     EXPECT_CALL(*this, PingTimeout).WillOnce(([]() {
       LOG(INFO) << "MockPingInterface PingTimeout Polled";
@@ -62,38 +60,13 @@ class MockPingInterface : public PingInterface {
   }
   void ExpectTriggerWrite() {
     EXPECT_CALL(*this, TriggerWrite).WillOnce(([]() {
-      return Immediate(absl::OkStatus());
+      return absl::OkStatus();
     }));
-  }
-  auto ExpectSendPingReturnArgs(SendPingArgs expected_args) {
-    struct SendPingReturn {
-      SendPingArgs args;
-      Notification ready;
-    };
-    std::shared_ptr<SendPingReturn> send_ping_return =
-        std::make_shared<SendPingReturn>();
-
-    EXPECT_CALL(*this, SendPing)
-        .WillOnce(WithArgs<0>([send_ping_return,
-                               expected_args](SendPingArgs args) {
-          LOG(INFO) << "MockPingInterface SendPing Polled (ack: " << args.ack
-                    << " opaque_data: " << args.opaque_data << ")."
-                    << "Expected (ack: " << expected_args.ack << ")";
-          EXPECT_EQ(expected_args.ack, args.ack);
-          send_ping_return->args = args;
-          send_ping_return->ready.Notify();
-          return Immediate(absl::OkStatus());
-        }));
-    return [send_ping_return] {
-      send_ping_return->ready.WaitForNotification();
-      return send_ping_return->args;
-    };
   }
 };
 
 class PingManagerTest : public YodelTest {
  protected:
-  using SendPingArgs = PingInterface::SendPingArgs;
   using YodelTest::YodelTest;
 
   Party* GetParty() { return party_.get(); }
@@ -122,29 +95,90 @@ class PingManagerTest : public YodelTest {
         [](auto) { LOG(INFO) << "Reached PingRequest end"; });
   }
 
+  void MaybeSpawnDelayedPing(PingManager& ping_system,
+                             std::optional<Duration> wait) {
+    if (wait.has_value()) {
+      GetContext<Party>()->Spawn(
+          "DelayedPing",
+          [&ping_system, wait = *wait]() {
+            return ping_system.DelayedPingPromise(wait);
+          },
+          [](auto) {});
+    }
+  }
+
+  void MaybeSpawnTimeout(PingManager& ping_system,
+                         std::optional<uint64_t> opaque_data) {
+    if (opaque_data.has_value()) {
+      GetContext<Party>()->Spawn(
+          "PingTimeout",
+          [&ping_system, opaque_data = *opaque_data]() {
+            return ping_system.TimeoutPromise(opaque_data);
+          },
+          [](auto) {});
+    }
+  }
+
+  void MaybeSendPing(PingManager& ping_system,
+                     Duration next_allowed_ping_interval) {
+    http2::FrameSender frame_sender =
+        transport_write_context_.GetWriteCycle().GetFrameSender();
+    std::optional<Duration> delayed_ping_wait =
+        ping_system.MaybeGetSerializedPingFrames(frame_sender,
+                                                 next_allowed_ping_interval);
+    MaybeSpawnDelayedPing(ping_system, delayed_ping_wait);
+    MaybeSpawnTimeout(ping_system, ping_system.NotifyPingSent());
+  }
+
+  std::optional<uint64_t> MaybeSendPingAndReturnID(
+      PingManager& ping_system, Duration next_allowed_ping_interval,
+      bool trigger_ping_timeout = true) {
+    http2::FrameSender frame_sender =
+        transport_write_context_.GetWriteCycle().GetFrameSender();
+    std::optional<Duration> delayed_ping_wait =
+        ping_system.MaybeGetSerializedPingFrames(frame_sender,
+                                                 next_allowed_ping_interval);
+    MaybeSpawnDelayedPing(ping_system, delayed_ping_wait);
+    std::optional<uint64_t> opaque_data = ping_system.NotifyPingSent();
+    if (trigger_ping_timeout) {
+      MaybeSpawnTimeout(ping_system, opaque_data);
+    }
+    return opaque_data;
+  }
+
  private:
   void InitCoreConfiguration() override {}
-  void Shutdown() override { party_.reset(); }
+  void InitTest() override {
+    InitParty();
+    transport_write_context_.StartWriteCycle();
+  }
+  void Shutdown() override {
+    party_.reset();
+    transport_write_context_.EndWriteCycle();
+  }
 
   RefCountedPtr<Party> party_;
+  http2::TransportWriteContext transport_write_context_;
 };
-#define PING_SYSTEM_TEST(name) YODEL_TEST(PingManagerTest, name)
+}  // namespace
 
-PING_SYSTEM_TEST(NoOp) {}
+#define PING_MANAGER_TEST(name) YODEL_TEST(PingManagerTest, name)
+
+PING_MANAGER_TEST(NoOp) {}
 
 // Promise based ping callbacks tests
-PING_SYSTEM_TEST(TestPingRequest) {
+PING_MANAGER_TEST(TestPingRequest) {
   // Test to spawn a promise waiting for a ping ack and trigger a ping ack.
   // This test asserts the following:
   // 1. Ping request promise is resolved on getting a ping ack with the same
   //    opqaue id.
   // 2. The ping callbacks are executed in the correct order.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(), kInterval,
+                          std::move(ping_interface), event_engine());
   std::string execution_order;
   StrictMock<MockFunction<void(absl::Status)>> on_done;
 
@@ -188,18 +222,18 @@ PING_SYSTEM_TEST(TestPingRequest) {
   EXPECT_STREQ(execution_order.c_str(), "1234");
 }
 
-PING_SYSTEM_TEST(TestPingUnrelatedAck) {
+PING_MANAGER_TEST(TestPingUnrelatedAck) {
   // Test to spawn a promise waiting for a ping ack and trigger two ping acks,
   // one with an unrelated id and one with the correct id. This test asserts the
   // following:
   // 1. Ping request promise is resolved by the ack with the same opaque id.
   // 2. The ping callbacks are executed in the correct order.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(), kInterval,
+                          std::move(ping_interface), event_engine());
   std::string execution_order;
   StrictMock<MockFunction<void(absl::Status)>> on_done;
 
@@ -249,18 +283,18 @@ PING_SYSTEM_TEST(TestPingUnrelatedAck) {
   EXPECT_STREQ(execution_order.c_str(), "12345");
 }
 
-PING_SYSTEM_TEST(TestPingWaitForAck) {
+PING_MANAGER_TEST(TestPingWaitForAck) {
   // Test to spawn a promise waiting for a ping ack and trigger a ping ack.
   // This test asserts the following:
   // 1. Ping request promise is resolved on getting a ping ack with the same
   //    opqaue id.
   // 2. The ping callbacks are executed in the correct order.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(), kInterval,
+                          std::move(ping_interface), event_engine());
   std::string execution_order;
   StrictMock<MockFunction<void(absl::Status)>> on_done;
 
@@ -298,16 +332,16 @@ PING_SYSTEM_TEST(TestPingWaitForAck) {
   EXPECT_STREQ(execution_order.c_str(), "1342");
 }
 
-PING_SYSTEM_TEST(TestPingCancel) {
+PING_MANAGER_TEST(TestPingCancel) {
   // Test to spawn a promise waiting for a ping ack and cancel it. This test
   // asserts the following:
   // 1. There are no outstanding requests for ping.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(), kInterval,
+                          std::move(ping_interface), event_engine());
 
   auto party = GetParty();
   EXPECT_EQ(ping_system.CountPingInflight(), 0);
@@ -331,19 +365,18 @@ PING_SYSTEM_TEST(TestPingCancel) {
   event_engine()->UnsetGlobalHooks();
 }
 
-PING_SYSTEM_TEST(TestPingManagerNoAck) {
+PING_MANAGER_TEST(TestPingManagerNoAck) {
   // Test to trigger a ping request for which no ack is received.
   // This test asserts the following:
   // 1. The ping timeout is triggered after the ping timeout duration.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  ping_interface->ExpectSendPing(SendPingArgs{false, /*not used*/ 1234});
   ping_interface->ExpectPingTimeout();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(), kInterval,
+                          std::move(ping_interface), event_engine());
   auto party = GetParty();
   party->Spawn(
       "PingRequest",
@@ -358,11 +391,9 @@ PING_SYSTEM_TEST(TestPingManagerNoAck) {
 
   party->Spawn(
       "PingManager",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Seconds(100),
-                                         /*ping_timeout=*/Duration::Seconds(
-                                             10));
+      [&] {
+        MaybeSendPing(ping_system, /*next_allowed_ping_interval=*/
+                      Duration::Seconds(100));
       },
       [](auto) { LOG(INFO) << "Reached PingManager end"; });
 
@@ -371,7 +402,7 @@ PING_SYSTEM_TEST(TestPingManagerNoAck) {
   event_engine()->UnsetGlobalHooks();
 }
 
-PING_SYSTEM_TEST(DISABLED_TestPingManagerDelayedPing) {
+PING_MANAGER_TEST(DISABLED_TestPingManagerDelayedPing) {
   // Test to trigger two ping requests.
   // The test asserts the following:
   // 1. The first ping is sent successfully.
@@ -382,11 +413,10 @@ PING_SYSTEM_TEST(DISABLED_TestPingManagerDelayedPing) {
   // 3. The ping timeout is triggered for the first ping.
   // 4. Write cycle is triggered only once even if there are multiple calls to
   //    MaybeSendPing within the next_allowed_ping_interval.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  ping_interface->ExpectSendPing(SendPingArgs{false, 1234});
   ping_interface->ExpectPingTimeout();
 
   // Delayed ping
@@ -394,8 +424,8 @@ PING_SYSTEM_TEST(DISABLED_TestPingManagerDelayedPing) {
 
   auto channel_args =
       GetChannelArgs().Set(GRPC_ARG_HTTP2_MAX_INFLIGHT_PINGS, 2);
-  PingManager ping_system(channel_args, std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(channel_args, /*ping_timeout=*/Duration::Seconds(100),
+                          std::move(ping_interface), event_engine());
   auto party = GetParty();
 
   // Ping 1
@@ -411,11 +441,9 @@ PING_SYSTEM_TEST(DISABLED_TestPingManagerDelayedPing) {
 
   party->Spawn(
       "PingManager",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Hours(1),
-                                         /*ping_timeout=*/Duration::Seconds(
-                                             100));
+      [&] {
+        MaybeSendPing(ping_system, /*next_allowed_ping_interval=*/
+                      kLongInterval);
       },
       [](auto) { LOG(INFO) << "Reached PingManager end"; });
 
@@ -432,20 +460,16 @@ PING_SYSTEM_TEST(DISABLED_TestPingManagerDelayedPing) {
 
   party->Spawn(
       "PingManager2",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Hours(1),
-                                         /*ping_timeout=*/Duration::Seconds(
-                                             100));
+      [&] {
+        MaybeSendPing(ping_system, /*next_allowed_ping_interval=*/
+                      kLongInterval);
       },
       [](auto) { LOG(INFO) << "Reached PingManager end"; });
   party->Spawn(
       "PingManager3",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Hours(1),
-                                         /*ping_timeout=*/Duration::Seconds(
-                                             100));
+      [&] {
+        MaybeSendPing(ping_system, /*next_allowed_ping_interval=*/
+                      kLongInterval);
       },
       [](auto) { LOG(INFO) << "Reached PingManager end"; });
 
@@ -454,57 +478,63 @@ PING_SYSTEM_TEST(DISABLED_TestPingManagerDelayedPing) {
   event_engine()->UnsetGlobalHooks();
 }
 
-PING_SYSTEM_TEST(TestPingManagerAck) {
+PING_MANAGER_TEST(TestPingManagerAck) {
   // Simple test to trigger a ping request and process a ping ack.
   // The test asserts the following:
   // 1. The ping request promise is resolved on getting a ping ack with the same
   //    opqaue id.
   // 2. The ping timeout is set to 1 hour to ensure that ping ack is processed
   //    first and ping timeout is not triggered.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
+  StrictMock<MockFunction<void()>> on_ping_ack_received;
+  EXPECT_CALL(on_ping_ack_received, Call());
 
-  auto cb = ping_interface->ExpectSendPingReturnArgs(SendPingArgs{false, 1234});
-
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(), /*ping_timeout=*/kLongInterval,
+                          std::move(ping_interface), event_engine());
   auto party = GetParty();
+  uint64_t opaque_data;
 
   party->Spawn(
       "PingRequest",
       TrySeq(ping_system.RequestPing(
                  []() { LOG(INFO) << "Ping requested. Waiting for ack."; },
                  /*important*/ false),
-             []() { return absl::OkStatus(); }),
+             [&on_ping_ack_received]() {
+               on_ping_ack_received.Call();
+               return absl::OkStatus();
+             }),
       [](auto) { LOG(INFO) << "Reached PingRequest end"; });
 
   party->Spawn(
       "PingManager",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Seconds(100),
-                                         /*ping_timeout=*/
-                                         Duration::Hours(1));
+      [&] {
+        std::optional<uint64_t> recv_opaque_data = MaybeSendPingAndReturnID(
+            ping_system, /*next_allowed_ping_interval=*/
+            Duration::Seconds(100));
+        EXPECT_TRUE(recv_opaque_data.has_value());
+        opaque_data = recv_opaque_data.value();
       },
       [](auto) { LOG(INFO) << "Reached PingManager end"; });
 
-  party->Spawn("PingAckReceived",
-               TrySeq(Sleep(Duration::Seconds(1)),
-                      Map(
-                          [&ping_system, &cb] {
-                            auto args = cb();
-                            return ping_system.AckPing(args.opaque_data);
-                          },
-                          [](bool) { return absl::OkStatus(); })),
-               [](auto) { LOG(INFO) << "Reached PingAckReceived end"; });
+  party->Spawn(
+      "PingAckReceived",
+      TrySeq(Sleep(kShortInterval),
+             Map([&ping_system,
+                  &opaque_data] { return ping_system.AckPing(opaque_data); },
+                 [](bool result) {
+                   EXPECT_TRUE(result);
+                   return absl::OkStatus();
+                 })),
+      [](auto) { LOG(INFO) << "Reached PingAckReceived end"; });
 
   WaitForAllPendingWork();
   event_engine()->TickUntilIdle();
   event_engine()->UnsetGlobalHooks();
 }
 
-PING_SYSTEM_TEST(TestPingManagerDelayedAck) {
+PING_MANAGER_TEST(TestPingManagerDelayedAck) {
   // Test to trigger a ping request and process a ping ack after ping timeout.
   // The test asserts the following:
   // 1. The ping timeout is triggered after the ping timeout duration. To ensure
@@ -512,16 +542,17 @@ PING_SYSTEM_TEST(TestPingManagerDelayedAck) {
   //    to wait for 1 hour.
   // 2. Note: The ping request promise will be resolved after the ping ack is
   //    received.
-  InitParty();
+
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
-
-  auto cb = ping_interface->ExpectSendPingReturnArgs(SendPingArgs{false, 1234});
   ping_interface->ExpectPingTimeout();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(),
+                          /*ping_timeout=*/kShortInterval,
+                          std::move(ping_interface), event_engine());
   auto party = GetParty();
+  uint64_t opaque_data;
+
   party->Spawn(
       "PingRequest",
       TrySeq(ping_system.RequestPing(
@@ -532,47 +563,47 @@ PING_SYSTEM_TEST(TestPingManagerDelayedAck) {
 
   party->Spawn(
       "PingManager",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Seconds(100),
-                                         /*ping_timeout=*/Duration::Seconds(2));
+      [&] {
+        std::optional<uint64_t> recv_opaque_data = MaybeSendPingAndReturnID(
+            ping_system, /*next_allowed_ping_interval=*/
+            Duration::Seconds(100));
+        EXPECT_TRUE(recv_opaque_data.has_value());
+        opaque_data = recv_opaque_data.value();
       },
       [](auto) { LOG(INFO) << "Reached PingManager end"; });
 
-  party->Spawn("DelayedPingAckReceived",
-               TrySeq(Sleep(Duration::Hours(1)),
-                      Map(
-                          [&ping_system, &cb] {
-                            auto args = cb();
-                            return ping_system.AckPing(args.opaque_data);
-                          },
-                          [](bool) { return absl::OkStatus(); })),
-               [](auto) { LOG(INFO) << "Reached PingAckReceived end"; });
+  party->Spawn(
+      "DelayedPingAckReceived",
+      TrySeq(Sleep(kLongInterval),
+             Map([&ping_system,
+                  &opaque_data] { return ping_system.AckPing(opaque_data); },
+                 [](bool) { return absl::OkStatus(); })),
+      [](auto) { LOG(INFO) << "Reached PingAckReceived end"; });
 
   WaitForAllPendingWork();
   event_engine()->TickUntilIdle();
   event_engine()->UnsetGlobalHooks();
 }
 
-PING_SYSTEM_TEST(TestPingManagerNoPingRequest) {
+PING_MANAGER_TEST(TestPingManagerNoPingRequest) {
   // Tests that MaybeSendPing returns immediately if no ping request has been
   // made.
-  InitParty();
+
   StrictMock<MockFunction<void(absl::Status)>> on_done;
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
 
-  PingManager ping_system(GetChannelArgs(), std::move(ping_interface),
-                          event_engine());
+  PingManager ping_system(GetChannelArgs(),
+                          /*ping_timeout=*/kShortInterval,
+                          std::move(ping_interface), event_engine());
   auto party = GetParty();
   EXPECT_CALL(on_done, Call(absl::OkStatus()));
 
   party->Spawn(
       "PingManager",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Seconds(100),
-                                         /*ping_timeout=*/Duration::Seconds(2));
+      [&] {
+        MaybeSendPing(ping_system, /*next_allowed_ping_interval=*/
+                      Duration::Seconds(100));
       },
       [&on_done](auto) {
         on_done.Call(absl::OkStatus());
@@ -584,22 +615,21 @@ PING_SYSTEM_TEST(TestPingManagerNoPingRequest) {
   event_engine()->UnsetGlobalHooks();
 }
 
-PING_SYSTEM_TEST(TestPingManagerImportantPing) {
+PING_MANAGER_TEST(TestPingManagerImportantPing) {
   // Tests important flag for ping requests. Asserts the following:
   // 1. The important flag is set correctly for the multiple ping requests.
   // 2. Once a ping request is sent out, the important flag is reset.
 
-  InitParty();
   StrictMock<MockFunction<void(absl::Status)>> on_done;
 
   std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
       std::make_unique<StrictMock<MockPingInterface>>();
-  ping_interface->ExpectSendPing(SendPingArgs{false, 1234});
   ping_interface->ExpectPingTimeout();
 
   PingManager ping_system(
       GetChannelArgs().Set(GRPC_ARG_HTTP2_MAX_INFLIGHT_PINGS, 1),
-      std::move(ping_interface), event_engine());
+      /*ping_timeout=*/Duration::Seconds(100), std::move(ping_interface),
+      event_engine());
 
   EXPECT_CALL(on_done, Call(absl::OkStatus()));
   EXPECT_FALSE(ping_system.PingRequested());
@@ -640,11 +670,9 @@ PING_SYSTEM_TEST(TestPingManagerImportantPing) {
 
   GetParty()->Spawn(
       "PingManager",
-      [&ping_system] {
-        return ping_system.MaybeSendPing(/*next_allowed_ping_interval=*/
-                                         Duration::Seconds(1),
-                                         /*ping_timeout=*/Duration::Seconds(
-                                             100));
+      [&] {
+        MaybeSendPing(ping_system, /*next_allowed_ping_interval=*/
+                      kShortInterval);
       },
       [&on_done, &ping_system](auto) {
         on_done.Call(absl::OkStatus());
@@ -652,6 +680,52 @@ PING_SYSTEM_TEST(TestPingManagerImportantPing) {
         EXPECT_FALSE(ping_system.ImportantPingRequested());
         LOG(INFO) << "Reached PingManager end";
       });
+
+  WaitForAllPendingWork();
+  event_engine()->TickUntilIdle();
+  event_engine()->UnsetGlobalHooks();
+}
+
+PING_MANAGER_TEST(TestPingManagerPingTimeoutAfterAck) {
+  // Tests the scenario where the ping timeout is triggered after the ping ack
+  // is received. The test asserts the following:
+  // 1. The ping request promise is resolved on getting a ping ack with the same
+  //    opqaue id.
+
+  StrictMock<MockFunction<void()>> on_ping_ack_received;
+  EXPECT_CALL(on_ping_ack_received, Call());
+  std::unique_ptr<StrictMock<MockPingInterface>> ping_interface =
+      std::make_unique<StrictMock<MockPingInterface>>();
+
+  PingManager ping_system(
+      GetChannelArgs().Set(GRPC_ARG_HTTP2_MAX_INFLIGHT_PINGS, 1),
+      /*ping_timeout=*/Duration::Seconds(100), std::move(ping_interface),
+      event_engine());
+  SliceBuffer output_buf;
+
+  SpawnPingRequest(
+      ping_system, /*important=*/false,
+      [] { LOG(INFO) << "Ping1 requested. Waiting for ack."; },
+      [&on_ping_ack_received] {
+        on_ping_ack_received.Call();
+        return absl::OkStatus();
+      });
+
+  GetParty()->Spawn(
+      "PingManager",
+      [&] {
+        return TrySeq([&]() {
+          auto recv_opaque_data = MaybeSendPingAndReturnID(
+              ping_system, /*next_allowed_ping_interval=*/kShortInterval,
+              /*trigger_ping_timeout=*/false);
+          EXPECT_TRUE(recv_opaque_data.has_value());
+          uint64_t opaque_data = recv_opaque_data.value();
+          EXPECT_TRUE(ping_system.AckPing(opaque_data));
+          MaybeSpawnTimeout(ping_system, recv_opaque_data);
+          return absl::OkStatus();
+        });
+      },
+      [](auto) { LOG(INFO) << "Reached PingManager end"; });
 
   WaitForAllPendingWork();
   event_engine()->TickUntilIdle();

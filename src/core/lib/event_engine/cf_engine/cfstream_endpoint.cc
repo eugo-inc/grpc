@@ -17,12 +17,14 @@
 #ifdef GPR_APPLE
 #include <AvailabilityMacros.h>
 #ifdef AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER
+#include <sys/socket.h>
+#include <sys/un.h>
 
+#include "src/core/lib/event_engine/cf_engine/cfstream_endpoint.h"
+#include "src/core/util/strerror.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "src/core/lib/event_engine/cf_engine/cfstream_endpoint.h"
-#include "src/core/util/strerror.h"
 
 namespace grpc_event_engine::experimental {
 
@@ -116,14 +118,39 @@ void CFStreamEndpointImpl::Connect(
   GRPC_TRACE_LOG(event_engine_endpoint, INFO)
       << "CFStreamEndpointImpl::Connect, host_port: " << peer_address_string_;
 
-  std::string host_string;
-  std::string port_string;
-  grpc_core::SplitHostPort(host_port.value(), &host_string, &port_string);
-  CFTypeUniqueRef<CFStringRef> host = CFStringCreateWithCString(
-      NULL, host_string.c_str(), kCFStringEncodingUTF8);
-  int port = ResolvedAddressGetPort(peer_address_);
-  CFStreamCreatePairWithSocketToHost(NULL, host, port, &cf_read_stream_,
-                                     &cf_write_stream_);
+  if (peer_address_.address()->sa_family == AF_UNIX) {
+    struct sockaddr_un server_addr =
+        *reinterpret_cast<const struct sockaddr_un*>(peer_address_.address());
+    // ResolvedAddress does not set the length field, which does not exist on
+    // Linux.
+    server_addr.sun_len = sizeof(server_addr);
+    CFDataRef address =
+        CFDataCreate(NULL, reinterpret_cast<const UInt8*>(&server_addr),
+                     sizeof(server_addr));
+    if (address == NULL) {
+      on_connect(absl::UnknownError("Failed to allocate CFData for address"));
+      return;
+    }
+
+    CFSocketSignature signature = {
+        .protocolFamily = PF_UNIX,
+        .socketType = SOCK_STREAM,
+        .protocol = 0,
+        .address = address,
+    };
+    CFStreamCreatePairWithPeerSocketSignature(
+        NULL, &signature, &cf_read_stream_, &cf_write_stream_);
+    CFRelease(address);
+  } else {
+    std::string host_string;
+    std::string port_string;
+    grpc_core::SplitHostPort(host_port.value(), &host_string, &port_string);
+    CFTypeUniqueRef<CFStringRef> host = CFStringCreateWithCString(
+        NULL, host_string.c_str(), kCFStringEncodingUTF8);
+    int port = ResolvedAddressGetPort(peer_address_);
+    CFStreamCreatePairWithSocketToHost(NULL, host, port, &cf_read_stream_,
+                                       &cf_write_stream_);
+  }
 
   SetupStreams(std::move(on_connect));
 }
@@ -248,9 +275,9 @@ CFStreamEndpointImpl::CFStreamEndpointImpl(
     std::shared_ptr<CFEventEngine> engine, MemoryAllocator memory_allocator)
     : engine_(std::move(engine)),
       memory_allocator_(std::move(memory_allocator)),
-      open_event_(engine_.get()),
-      read_event_(engine_.get()),
-      write_event_(engine_.get()) {
+      open_event_(engine_->thread_pool()),
+      read_event_(engine_->thread_pool()),
+      write_event_(engine_->thread_pool()) {
   open_event_.InitEvent();
   read_event_.InitEvent();
   write_event_.InitEvent();
@@ -275,9 +302,6 @@ void CFStreamEndpointImpl::Shutdown() {
   open_event_.SetShutdown(shutdownStatus);
   read_event_.SetShutdown(shutdownStatus);
   write_event_.SetShutdown(shutdownStatus);
-
-  CFReadStreamSetClient(cf_read_stream_, 0, nullptr, nullptr);
-  CFWriteStreamSetClient(cf_write_stream_, 0, nullptr, nullptr);
 
   CFReadStreamSetDispatchQueue(cf_read_stream_, nullptr);
   CFWriteStreamSetDispatchQueue(cf_write_stream_, nullptr);
