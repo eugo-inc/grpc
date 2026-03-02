@@ -23,6 +23,7 @@ py = import('python').find_installation(pure: false)
 
 
 # === @begin: Dependencies ===
+#
 # If we'd omit `grpc` as a dependency, the extension below will build fine as it still has access to gRPC headers (via our CFLAGS, CXXFLAGS, and similar variables).
 # However, it won't have `libgrpc` and `libgpr` linked so it will crash at runtime. Why does it build without error in a first place? It's because Python extensions
 # are always built to exclude dependency on `libpython.so` while still using its symbols (as it's `libpython.so` who loads these extensions at runtime, so related
@@ -30,28 +31,29 @@ py = import('python').find_installation(pure: false)
 # libpython.so simultaneously). As a side effect of this, Python extensions don't need any of its dynamic library dependencies to be present at buildtime, only the headers.
 #
 # Even so, we always link all dependencies explicitely. It's not only makes the build more reliable but also allows to perform LTO on resultant object and benefit from LLVM bitcode embedded into linked libraries.
-grpc = dependency('gRPC', method: 'cmake', modules: ['gRPC::gpr', 'gRPC::grpc']) # TODO+ Run-time dependency grpc (modules: gRPC::gpr, gRPC::grpc) found: YES 8.11.0-DEV
+grpc = dependency('gRPC', method: 'cmake', modules: ['gRPC::gpr', 'gRPC::grpc'])
 
 # See https://github.com/grpc/grpc/issues/41696 for details on why we need to link against absl::log_initialize.
 # absl::log_initialize provides absl::InitializeLog(), called from _cygrpc/absl.pyx.pxi
-# during module init. libgrpc does NOT link against this (CMakeLists.txt:3205-3232 shows
+# during module init. `libgrpc` does NOT link against this (`CMakeLists.txt:3205-3232` shows
 # grpc's target_link_libraries — no absl::log_initialize). Upstream setup.py compiles
 # absl/log/initialize.cc directly into cygrpc.so (bundled-abseil case) or expects
 # libabsl_log_initialize.so at runtime (system-abseil case, see setup.py:522-526).
-# We must link explicitly since cygrpc.so is the caller, not libgrpc.
+# We must link explicitly since cygrpc.so is the caller, not `libgrpc`.
 #
-# required: false — with a unity/monolithic abseil build (-DABSL_BUILD_MONOLITHIC_SHARED_LIBS=ON),
-# absl::log_initialize still exists as a CMake INTERFACE target in abslTargets.cmake but just
-# points to absl::abseil_dll (the single .so). The symbol comes transitively via libgrpc → abseil_dll,
+# required: false — with a unity/monolithic abseil build (`-DABSL_BUILD_MONOLITHIC_SHARED_LIBS=ON`),
+# `absl::log_initialize` still exists as a CMake INTERFACE target in `abslTargets.cmake` but just
+# points to `absl::abseil_dll` (the single .so). The symbol comes transitively via `libgrpc` → `libabseil_dll`,
 # so this dep is redundant but harmless in that case.
 #
-# NOTE: The CMake package name is 'absl' (not 'absl_log_initialize'). Abseil installs a
-# single package config (abslConfig.cmake) that exports all targets. Using the wrong
-# package name causes find_package() to fail silently with required: false.
+# NOTE: The CMake package name is `absl` (not `absl_log_initialize`). Abseil installs a
+# single package config (`abslConfig.cmake`) that exports all targets. Using the wrong
+# package name causes `find_package()` to fail silently with `required: false`.
 #
-# TODO+: After switching to abseil unity build, recheck whether this explicit dep is still
-# needed or if InitializeLog() comes transitively through libgrpc → libabseil_dll.
+# @TODO+: After switching to abseil unity build, recheck whether this explicit dep is still
+# needed or if `InitializeLog()` comes transitively through `libgrpc` → `libabseil_dll`.
 absl_log_initialize = dependency('absl', method: 'cmake', modules: ['absl::log_initialize'], required: false)
+#
 # === @end: Dependencies ===
 
 
@@ -245,9 +247,10 @@ py.extension_module(
 
 
 # === @begin: Pure Python ===
-# `py.get_install_dir()` -> site_packages!
-
-# roots.pem — SSL root certificates.
+#
+# `py.get_install_dir()` -> `site_packages`!
+#
+# `roots.pem` — SSL root certificates.
 #
 # Upstream setup.py:586-591 copies `etc/roots.pem` into `src/python/grpcio/grpc/_cython/_credentials/`
 # at module load time (before setup() runs). The `_credentials/` directory does NOT exist in the source
@@ -255,9 +258,9 @@ py.extension_module(
 # picks it up for inclusion in the sdist/wheel.
 #
 # At runtime, `security.pyx.pxi:26` loads it via:
-#   pkgutil.get_data(pkg, '_credentials/roots.pem')
+#   `pkgutil.get_data(pkg, '_credentials/roots.pem')`
 # where `pkg` resolves to `grpc._cython`. This means the file must be installed at:
-#   site-packages/grpc/_cython/_credentials/roots.pem
+#   `site-packages/grpc/_cython/_credentials/roots.pem`
 #
 # Meson doesn't run setup.py's copy step, so we install `etc/roots.pem` directly to the correct
 # location. Without this, the grpc package silently falls back to certifi or system-provided certs,
@@ -272,8 +275,8 @@ install_data(
 #
 # This file is license-header-only (no code). It exists upstream to make `_cygrpc` a proper Python
 # package. The upstream wheel includes it, and while we exclude the `_cygrpc/` *directory* from
-# `install_subdir` below (since it contains only Cython sources: .pxd.pxi, .pyx.pxi, grpc.pxi,
-# plus the aio/ subdir), we must install this one file separately to preserve the package structure.
+# `install_subdir` below (since it contains only Cython sources: `.pxd.pxi`, `.pyx.pxi`, `grpc.pxi`,
+# plus the `aio/` subdir), we must install this one file separately to preserve the package structure.
 #
 # Without it, `_cygrpc` wouldn't be importable as a package. While no code currently imports it
 # directly, its presence matches upstream's wheel layout (verified via Section "Validating the Eugo
@@ -298,8 +301,8 @@ install_data(
 # directory tree recursively, minus explicit exclusions.
 #
 # The source path `src/python/grpcio/grpc/` installs *as* `grpc/` under `py.get_install_dir()`
-# (i.e., site-packages), because Meson's `install_subdir` preserves the last path component.
-# Result: site-packages/grpc/__init__.py, site-packages/grpc/aio/__init__.py, etc.
+# (i.e., `site-packages`), because Meson's `install_subdir` preserves the last path component.
+# Result: `site-packages/grpc/__init__.py`, `site-packages/grpc/aio/__init__.py`, etc.
 install_subdir(
     'src/python/grpcio/grpc/',
 
@@ -341,4 +344,5 @@ install_subdir(
         'framework/interfaces/face/BUILD.bazel',
     ]
 )
+#
 # === @end: Pure Python ===
