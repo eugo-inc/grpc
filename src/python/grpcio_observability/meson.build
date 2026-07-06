@@ -81,7 +81,7 @@ py.extension_module(
         # setup.py sets this for aarch64 compatibility with <inttypes.h> used in
         # src/core/telemetry/call_tracer.h. It's a no-op on modern compilers
         # (gRPC's port_platform.h also defines it unconditionally). Omitted here
-        # for same reasons as root meson.build — see copilot-instructions.md.
+        # for same reasons as root meson.build — see the eugo-meson-build-review skill.
 
         # `-frtti`
         # setup.py explicitly sets this. RTTI is enabled by default in GCC/Clang,

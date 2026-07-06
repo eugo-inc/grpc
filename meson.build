@@ -280,7 +280,7 @@ install_data(
 #
 # Without it, `_cygrpc` wouldn't be importable as a package. While no code currently imports it
 # directly, its presence matches upstream's wheel layout (verified via Section "Validating the Eugo
-# wheel against upstream" in copilot-instructions.md).
+# wheel against upstream" in the eugo-wheel-validation skill).
 install_data(
     [
         'src/python/grpcio/grpc/_cython/_cygrpc/__init__.py',

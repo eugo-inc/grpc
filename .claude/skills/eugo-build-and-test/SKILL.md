@@ -5,7 +5,7 @@ description: Use when building, installing, or smoke-testing the Eugo gRPC fork 
 
 # Build & test the Eugo gRPC fork
 
-Two protomolecule packages consume this fork (eugo-inc/grpc, branch master),
+Two protomolecule packages consume this fork (eugo-inc/grpc, branch eugo-main),
 both pinned by git_commit in their meta.json - keep the two pins IDENTICAL
 (cygrpc.so links the libgrpc that native/grpc installed; skew is an ABI trap):
 
@@ -15,7 +15,7 @@ both pinned by git_commit in their meta.json - keep the two pins IDENTICAL
 
 Build order is always native/grpc first, grpcio second. `grpcio_tools` is NOT
 built - native `protoc` + `grpc_python_plugin` replace it (see
-`.github/copilot-instructions.md`, "How grpcio_tools was eliminated").
+`eugo-grpcio-tools-migration`).
 
 ## How protomolecule builds native/grpc (setup distilled)
 
@@ -53,11 +53,13 @@ tree verbatim.
 
 ```bash
 # native (requires system absl/protobuf/c-ares/zlib-ng/openssl/re2/opencensus)
+# installs to /usr/local
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc) && cmake --install build
 
 # grpcio (requires the native install above)
-pip install . --no-build-isolation
+pip install meson-python meson cmake cython   # build prerequisites
+pip install . --no-build-isolation            # or: pip wheel .
 ```
 
 ## What healthy looks like
@@ -68,18 +70,21 @@ pip install . --no-build-isolation
   else `U`), with `libgrpc.so` and `libgpr.so` in `readelf -d ... NEEDED`.
 - Quick smoke: `python3 -c "import grpc; grpc.insecure_channel('localhost:0').close(); print(grpc.__version__)"`.
 
-## Full validation - DEFER to copilot-instructions
+## Full validation - DEFER to eugo-wheel-validation
 
 The primary correctness gate is the wheel-vs-upstream comparison plus runtime
 tests 6a-6e (import, generic RPC, protoc codegen, sync + asyncio roundtrips)
-in `.github/copilot-instructions.md`, section "Validating the Eugo wheel
-against upstream". Run it after every upstream merge, every `meson.build`
-change, and before bumping the protomolecule pins. Do not duplicate it here.
+in the `eugo-wheel-validation` skill. Run it after every upstream merge,
+every `meson.build` change, and before bumping the protomolecule pins. Do
+not duplicate it here.
 
 ## Related
 
 - `eugo-rebuild` - cheapest-correct-rebuild decision guide.
 - `eugo-meson-build-review` - pre-commit checklist for meson.build/setup.py.
 - `eugo-upstream-merge` - merge recipe + the meta.json pin bump (push to
-  master BEFORE editing pins; local-only SHAs break the protomolecule build).
+  eugo-main BEFORE editing pins; local-only SHAs break the protomolecule
+  build).
+- `eugo-wheel-validation` - the full validation gate (steps 1-5 + tests 6a-6e).
+- `eugo-grpcio-tools-migration` - the native protoc + grpc_python_plugin path.
 - `meson` / `bazel` skills - general build-system reference.

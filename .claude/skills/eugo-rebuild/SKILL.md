@@ -14,9 +14,9 @@ BOTH rebuilds, in that order.
 |---|---|
 | Docs, `.claude/`, `.github/`, comments only | Nothing. |
 | Pure Python under `src/python/grpcio/grpc/` (no `.pyx`/`.pxi`/`.pxd`) | grpcio wheel rebuild only (`pip install . --no-build-isolation`) - meson installs `.py` verbatim, no native compile. |
-| Cython (`.pyx`/`.pxi`/`.pxd`), root `meson.build`, `pyproject.toml` | grpcio rebuild + the wheel-vs-upstream file-list check (copilot-instructions, "Validating the Eugo wheel"). |
+| Cython (`.pyx`/`.pxi`/`.pxd`), root `meson.build`, `pyproject.toml` | grpcio rebuild + the wheel-vs-upstream file-list check (`eugo-wheel-validation`). |
 | `src/core/**`, `include/**`, `CMakeLists.txt`, `cmake/**`, `third_party` pointer | Native CMake rebuild + install, THEN grpcio rebuild (cygrpc must relink against the new libgrpc ABI). |
-| `setup.py` / `commands.py` | No build runs from them in Eugo (meson replaced setuptools) - but run the macro decision framework (copilot-instructions, "Decision framework for new macros") to see if `meson.build` must mirror the change; if it does, previous row applies. |
+| `setup.py` / `commands.py` | No build runs from them in Eugo (meson replaced setuptools) - but run the macro decision framework (`eugo-meson-build-review`) to see if `meson.build` must mirror the change; if it does, previous row applies. |
 | `tools/distrib/python/grpcio_tools/**` | Nothing - experimental reference only, never built. |
 
 ## Cheap pre-build sanity
@@ -30,8 +30,9 @@ BOTH rebuilds, in that order.
 
 ## When protomolecule must be rebuilt / pin-bumped
 
-Merging to fork `master` changes NOTHING downstream until the meta.json pins
-move. After a merge lands: push `master`, verify the SHA is on GitHub, then
+Merging to fork `eugo-main` changes NOTHING downstream until the meta.json
+pins move. After a merge lands: push `eugo-main`, verify the SHA is on
+GitHub, then
 bump BOTH `native/grpc/meta.json` and `wave_4/grpcio/meta.json` to the SAME
 commit, and rebuild native/grpc before grpcio (runtime dep order). Never pin
 a local-only or squashed-away SHA. Details: `eugo-upstream-merge`.
